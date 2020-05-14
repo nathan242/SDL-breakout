@@ -269,8 +269,18 @@ void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int are
             obj->pos_y = 500;
             wait_for_input = true;
         }
-    } else if (obj2 != NULL && obj2->pos_y < 500) {
+    } else if (obj2->pos_y < 500) {
         obj2->active = false;
+    } else {
+        if (obj->pos_x <= obj2->pos_x+20) {
+            obj->step_x = -2;
+        } else if (obj->pos_x >= obj2->pos_x+80) {
+            obj->step_x = 2;
+        } else if (obj->step_x == 2) {
+            obj->step_x = 1;
+        } else if (obj->step_x == -2) {
+            obj->step_x = -1;
+        }
     }
     /*
     // Check if collision is with edge
