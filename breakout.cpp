@@ -13,7 +13,7 @@
 // Allocate surfaces
 SDL_Surface *screen = NULL;
 //SDL_Surface *numbers = NULL;
-//SDL_Surface *p1win = NULL;
+SDL_Surface *press_a_key = NULL;
 //SDL_Surface *p2win = NULL;
 
 // SDL Rect for positions of numbers in numbers.png
@@ -28,6 +28,8 @@ SDL_Rect offset;
 // Variables for player scores
 //int scoreplayer1;
 //int scoreplayer2;
+
+bool wait_for_input = false;
 
 struct phys_obj
 {
@@ -240,7 +242,13 @@ phys::~phys()
 
 void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int area_x, int area_y)
 {
-    if (obj2 != NULL && obj2->pos_y < 500) {
+    if (obj2 == NULL) {
+        if (obj->pos_y+obj->size_y >= area_y) {
+            obj->pos_x = 100;
+            obj->pos_y = 500;
+            wait_for_input = true;
+        }
+    } else if (obj2 != NULL && obj2->pos_y < 500) {
         obj2->active = false;
     }
     /*
@@ -283,8 +291,8 @@ void breakout()
     // Variables
 
     // Constant variables
-    const int resX = 800;
-    const int resY = 600;
+    const int res_x = 800;
+    const int res_y = 600;
     const int bpp = 32;
 
 /*
@@ -367,13 +375,15 @@ void breakout()
     bool up = false;
     bool down = false;
 
+    wait_for_input = true;
+
     // Initialize SDL
     SDL_Init(SDL_INIT_VIDEO);
-    screen = SDL_SetVideoMode(resX, resY, bpp, SDL_HWSURFACE);
+    screen = SDL_SetVideoMode(res_x, res_y, bpp, SDL_HWSURFACE);
     SDL_WM_SetCaption("SDL BREAKOUT", NULL);
 
     // Set screen clearing colour
-    Uint32 clearColor = SDL_MapRGB(screen->format, 0, 0, 0);
+    Uint32 clear_colour = SDL_MapRGB(screen->format, 0, 0, 0);
 
     // Physics objects
     phys_obj *paddle = new phys_obj;
@@ -420,15 +430,13 @@ void breakout()
     SDL_FillRect(ball->sprite, NULL, SDL_MapRGB(screen->format, 255, 255, 255));
 
 
-/*
     // Load images
-    numbers = SDL_DisplayFormat(IMG_Load("numbers.png"));
-    p1win = SDL_DisplayFormat(IMG_Load("p1win.png"));
-    p2win = SDL_DisplayFormat(IMG_Load("p2win.png"));
-*/
+    //numbers = SDL_DisplayFormat(IMG_Load("numbers.png"));
+    press_a_key = SDL_DisplayFormat(IMG_Load("press_a_key.png"));
+    //p2win = SDL_DisplayFormat(IMG_Load("p2win.png"));
 
     // Physics
-    phys *physics = new phys(resX, resY);
+    phys *physics = new phys(res_x, res_y);
     physics->add_object(paddle);
     physics->add_object(ball);
 
@@ -511,17 +519,23 @@ void breakout()
             }
         }
 
-        // Move left paddle
-        paddle->step_x = 0;
-        if (left) { paddle->step_x = -1; }
-        if (right) { paddle->step_x = 1; }
+        if (!wait_for_input) {
+            // Move left paddle
+            paddle->step_x = 0;
+            if (left) { paddle->step_x = -1; }
+            if (right) { paddle->step_x = 1; }
 
-        // Advance physics
-        physics->advance();
+            // Advance physics
+            physics->advance();
+        } else {
+            if (left || right || up || down) {
+                wait_for_input = false;
+            }
+        }
 
         // Redraw screen
         // Clear screen
-        SDL_FillRect(screen, NULL, clearColor);
+        SDL_FillRect(screen, NULL, clear_colour);
 
 /*
         // First number
@@ -535,6 +549,12 @@ void breakout()
         SDL_BlitSurface(numbers, &num[scoreplayer2], screen, &offset );
 */
 
+        if (wait_for_input) {
+            offset.x = 306;
+            offset.y = 290;
+            SDL_BlitSurface(press_a_key, NULL, screen, &offset);
+        }
+
         // Ball
         offset.x = ball->pos_x;
         offset.y = ball->pos_y;
@@ -544,7 +564,6 @@ void breakout()
         offset.x = paddle->pos_x;
         offset.y = paddle->pos_y;
         SDL_BlitSurface(paddle->sprite, NULL, screen, &offset);
-
 
         for (int y = 0; y < NUM_BLOCKS_Y; y++) {
             for (int x = 0; x < NUM_BLOCKS_X; x++) {
