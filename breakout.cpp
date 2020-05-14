@@ -162,21 +162,40 @@ void phys::check_collide(phys_obj *obj, int id)
     while (list != NULL) {
         if (list->id != id && list->obj->active) {
             obj2 = list->obj;
+
+            // Left side
             x1 = obj2->pos_x-obj->size_x;
+            // Right side
             x2 = obj2->pos_x+obj2->size_x;
+            // Top side
             y1 = obj2->pos_y-obj->size_y;
+            // Bottom side
             y2 = obj2->pos_y+obj2->size_y;
 
             if (obj->pos_x >= x1 && obj->pos_x <= x2 && obj->pos_y >= y1 && obj->pos_y <= y2) {
                 if (obj->collided != obj2) {
+                    if (obj->pos_x-x1 > x2-obj->pos_x) {
+                        // Collided on right side
+                        diff_x = x2-obj->pos_x;
+                    } else {
+                        // Collided on left side
+                        diff_x = obj->pos_x-x1;
+                    }
 
-                    if (obj->pos_x-x1 > x2-obj->pos_x) { diff_x = x2-obj->pos_x; } else { diff_x = obj->pos_x-x1; }
-                    if (obj->pos_y-y1 > y2-obj->pos_y) { diff_y = y2-obj->pos_y; } else { diff_y = obj->pos_y-y1; }
+                    if (obj->pos_y-y1 > y2-obj->pos_y) {
+                        // Collided on bottom side
+                        diff_y = y2-obj->pos_y;
+                    } else {
+                        // Collided on top side
+                        diff_y = obj->pos_y-y1;
+                    }
 
                     if (diff_y > diff_x) {
                         if (obj->callback != NULL) { obj->callback(obj, obj2, 1, area_x, area_y); }
                         if (obj->bounce > 0) {
-                            obj->step_x = obj->step_x*-1;
+                            if ((obj->step_x > 0 && obj->pos_x < obj2->pos_x) || (obj->step_x < 0 && obj->pos_x > obj2->pos_x)) {
+                                obj->step_x = obj->step_x*-1;
+                            }
                         } else {
                             obj->step_x = 0;
                             obj->step_y = 0;
@@ -184,7 +203,9 @@ void phys::check_collide(phys_obj *obj, int id)
                     } else {
                         if (obj->callback != NULL) { obj->callback(obj, obj2, 2, area_x, area_y); }
                         if (obj->bounce > 0) {
-                            obj->step_y = obj->step_y*-1;
+                            if ((obj->step_y > 0 && obj->pos_y < obj2->pos_y) || (obj->step_y < 0 && obj->pos_y > obj2->pos_y)) {
+                                obj->step_y = obj->step_y*-1;
+                            }
                         } else {
                             obj->step_x = 0;
                             obj->step_y = 0;
