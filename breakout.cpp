@@ -1,3 +1,4 @@
+#include "physics.h"
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 
@@ -31,235 +32,11 @@ SDL_Rect offset;
 
 bool wait_for_input = false;
 
-struct phys_obj
+struct game_obj
 {
     SDL_Surface *sprite;
-
-    int pos_x;
-    int pos_y;
-
-    int size_x;
-    int size_y;
-
-    int step_x;
-    int step_y;
-
-    int delay;
-    int delay_counter;
-
-    int bounce;
-    phys_obj *collided;
-
-    void (*callback)(phys_obj *obj, phys_obj *obj2, int collide_axis, int area_x, int area_y);
-
-    bool active;
+    phys_obj *phys;
 };
-
-class phys
-{
-    private:
-        int area_x;
-        int area_y;
-
-        int list_len;
-
-        struct obj_list
-        {
-            int id;
-            phys_obj *obj;
-            obj_list *next;
-        };
-        obj_list *list_head;
-
-        void check_collide(phys_obj *obj, int id);
-    public:
-        phys(int x, int y);
-        int add_object(phys_obj *obj);
-        void advance();
-        ~phys();
-};
-
-phys::phys(int x, int y)
-{
-    area_x = x;
-    area_y = y;
-
-    list_len = 0;
-
-    list_head = NULL;
-}
-
-int phys::add_object(phys_obj *obj)
-{
-    obj_list *list = new obj_list;
-    list->id = list_len;
-    list->obj = obj;
-    list->next = NULL;
-
-    // First
-    if (list_head == NULL) {
-        list_head = list;
-    } else {
-        // Append to list
-        obj_list *list_item = list_head;
-        while (list_item->next != NULL) {
-            list_item = list_item->next;
-        }
-        list_item->next = list;
-    }
-
-    return ++list_len;
-}
-
-void phys::advance()
-{
-    obj_list *list = NULL;
-    phys_obj *obj = NULL;
-
-    list = list_head;
-
-    while (list != NULL) {
-        // Get object
-        obj = list->obj;
-
-        if (obj->active) {
-            // Check if object is colliding with another
-            check_collide(obj, list->id);
-
-            // Move object
-            if (obj->delay_counter == obj->delay) {
-                obj->pos_x += obj->step_x;
-                obj->pos_y += obj->step_y;
-
-                obj->delay_counter = 0;
-            } else {
-                obj->delay_counter++;
-            }
-        }
-
-        // Get next
-        list = list->next;
-    }
-    
-}
-
-void phys::check_collide(phys_obj *obj, int id)
-{
-    obj_list *list = NULL;
-    phys_obj *obj2 = NULL;
-
-    int x1;
-    int x2;
-    int y1;
-    int y2;
-
-    int diff_x;
-    int diff_y;
-
-    list = list_head;
-
-    // Check collision with other objects
-    while (list != NULL) {
-        if (list->id != id && list->obj->active) {
-            obj2 = list->obj;
-
-            // Left side
-            x1 = obj2->pos_x-obj->size_x;
-            // Right side
-            x2 = obj2->pos_x+obj2->size_x;
-            // Top side
-            y1 = obj2->pos_y-obj->size_y;
-            // Bottom side
-            y2 = obj2->pos_y+obj2->size_y;
-
-            if (obj->pos_x >= x1 && obj->pos_x <= x2 && obj->pos_y >= y1 && obj->pos_y <= y2) {
-                if (obj->collided != obj2) {
-                    if (obj->pos_x-x1 > x2-obj->pos_x) {
-                        // Collided on right side
-                        diff_x = x2-obj->pos_x;
-                    } else {
-                        // Collided on left side
-                        diff_x = obj->pos_x-x1;
-                    }
-
-                    if (obj->pos_y-y1 > y2-obj->pos_y) {
-                        // Collided on bottom side
-                        diff_y = y2-obj->pos_y;
-                    } else {
-                        // Collided on top side
-                        diff_y = obj->pos_y-y1;
-                    }
-
-                    if (diff_y > diff_x) {
-                        if (obj->callback != NULL) { obj->callback(obj, obj2, 1, area_x, area_y); }
-                        if (obj->bounce > 0) {
-                            if ((obj->step_x > 0 && obj->pos_x < obj2->pos_x) || (obj->step_x < 0 && obj->pos_x > obj2->pos_x)) {
-                                obj->step_x = obj->step_x*-1;
-                            }
-                        } else {
-                            obj->step_x = 0;
-                            obj->step_y = 0;
-                        }
-                    } else {
-                        if (obj->callback != NULL) { obj->callback(obj, obj2, 2, area_x, area_y); }
-                        if (obj->bounce > 0) {
-                            if ((obj->step_y > 0 && obj->pos_y < obj2->pos_y) || (obj->step_y < 0 && obj->pos_y > obj2->pos_y)) {
-                                obj->step_y = obj->step_y*-1;
-                            }
-                        } else {
-                            obj->step_x = 0;
-                            obj->step_y = 0;
-                        }
-                    }
-                    obj->collided = obj2;
-                }
-            } else if (obj->collided == obj2) {
-                obj->collided = NULL;
-            }
-        }
-
-        list = list->next;
-    }
-
-    // Check collision with edges
-    if (obj->pos_x >= area_x-obj->size_x || obj->pos_x <= 0) { 
-        if (obj->callback != NULL) { obj->callback(obj, NULL, 0, area_x, area_y); }
-        if (obj->bounce > 0) {
-            obj->step_x = obj->step_x*-1;
-        } else if (obj->pos_x >= area_x-obj->size_x && obj->step_x > 0 || obj->pos_x <= 0 && obj->step_x < 0) {
-            obj->step_x = 0;
-            obj->step_y = 0;
-        }
-    }
-    if (obj->pos_y >= area_y-obj->size_y || obj->pos_y <= 0) {
-        if (obj->callback != NULL) { obj->callback(obj, NULL, 0, area_x, area_y); }
-        if (obj->bounce > 0) {
-            obj->step_y = obj->step_y*-1;
-        } else if (obj->pos_y >= area_y-obj->size_y && obj->step_y > 0 || obj->pos_y <= 0 && obj->step_y < 0) {
-            obj->step_x = 0;
-            obj->step_y = 0;
-        }
-    }
-}
-
-phys::~phys()
-{
-    if (list_head != NULL) {
-        obj_list *list = NULL;
-        obj_list *prev = NULL;
-        phys_obj *obj = NULL;
-
-        list = list_head;
-
-        while (list != NULL) {
-            obj = list->obj;
-            delete obj;
-            prev = list;
-            list = list->next;
-            delete prev;
-        }
-    }
-}
 
 void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int area_x, int area_y)
 {
@@ -416,10 +193,10 @@ void breakout()
     // Set screen clearing colour
     Uint32 clear_colour = SDL_MapRGB(screen->format, 0, 0, 0);
 
-    // Physics objects
-    phys_obj *paddle = new phys_obj;
-    phys_obj *ball = new phys_obj;
-    phys_obj *blocks[NUM_BLOCKS_Y][NUM_BLOCKS_X];
+    // Game objects
+    game_obj *paddle = new game_obj;
+    game_obj *ball = new game_obj;
+    game_obj *blocks[NUM_BLOCKS_Y][NUM_BLOCKS_X];
 
     int block_pos_x = BLOCK_SPACE_X_FIRST;
     int block_pos_y = BLOCK_SPACE_Y_FIRST;
@@ -430,34 +207,36 @@ void breakout()
 
     // Paddle
     paddle->sprite = SDL_CreateRGBSurface(0, 100, 20, 32, 0, 0, 0, 0);
-    paddle->pos_x = 50;
-    paddle->pos_y = 550;
-    paddle->size_x = 100;
-    paddle->size_y = 20;
-    paddle->step_x = 0;
-    paddle->step_y = 0;
-    paddle->delay = 0;
-    paddle->delay_counter = 0;
-    paddle->bounce = 0;
-    paddle->collided = NULL;
-    paddle->callback = NULL;
-    paddle->active = true;
+    paddle->phys = new phys_obj;
+    paddle->phys->pos_x = 50;
+    paddle->phys->pos_y = 550;
+    paddle->phys->size_x = 100;
+    paddle->phys->size_y = 20;
+    paddle->phys->step_x = 0;
+    paddle->phys->step_y = 0;
+    paddle->phys->delay = 0;
+    paddle->phys->delay_counter = 0;
+    paddle->phys->bounce = 0;
+    paddle->phys->collided = NULL;
+    paddle->phys->callback = NULL;
+    paddle->phys->active = true;
     SDL_FillRect(paddle->sprite, NULL, SDL_MapRGB(screen->format, 255, 255, 255));
 
     // Ball
     ball->sprite = SDL_CreateRGBSurface(0, 20, 20, 32, 0, 0, 0, 0);
-    ball->pos_x = 100;
-    ball->pos_y = 500;
-    ball->size_x = 20;
-    ball->size_y = 20;
-    ball->step_x = 1;
-    ball->step_y = -1;
-    ball->delay = 0;
-    ball->delay_counter = 0;
-    ball->bounce = 1;
-    ball->collided = NULL;
-    ball->callback = collision_callback;
-    ball->active = true;
+    ball->phys = new phys_obj;
+    ball->phys->pos_x = 100;
+    ball->phys->pos_y = 500;
+    ball->phys->size_x = 20;
+    ball->phys->size_y = 20;
+    ball->phys->step_x = 1;
+    ball->phys->step_y = -1;
+    ball->phys->delay = 0;
+    ball->phys->delay_counter = 0;
+    ball->phys->bounce = 1;
+    ball->phys->collided = NULL;
+    ball->phys->callback = collision_callback;
+    ball->phys->active = true;
     SDL_FillRect(ball->sprite, NULL, SDL_MapRGB(screen->format, 255, 255, 255));
 
 
@@ -468,30 +247,31 @@ void breakout()
 
     // Physics
     phys *physics = new phys(res_x, res_y);
-    physics->add_object(paddle);
-    physics->add_object(ball);
+    physics->add_object(paddle->phys);
+    physics->add_object(ball->phys);
 
     for (int y = 0; y < NUM_BLOCKS_Y; y++) {
         for (int x = 0; x < NUM_BLOCKS_X; x++) {
             // Blocks
-            blocks[y][x] = new phys_obj;
+            blocks[y][x] = new game_obj;
+            blocks[y][x]->phys = new phys_obj;
 
             blocks[y][x]->sprite = SDL_CreateRGBSurface(0, BLOCK_WIDTH, BLOCK_HEIGHT, 32, 0, 0, 0, 0);
-            blocks[y][x]->pos_x = block_pos_x;
-            blocks[y][x]->pos_y = block_pos_y;
-            blocks[y][x]->size_x = BLOCK_WIDTH;
-            blocks[y][x]->size_y = BLOCK_HEIGHT;
-            blocks[y][x]->step_x = 0;
-            blocks[y][x]->step_y = 0;
-            blocks[y][x]->delay = 0;
-            blocks[y][x]->delay_counter = 0;
-            blocks[y][x]->bounce = 0;
-            blocks[y][x]->collided = NULL;
-            blocks[y][x]->callback = NULL;
-            blocks[y][x]->active = true;
+            blocks[y][x]->phys->pos_x = block_pos_x;
+            blocks[y][x]->phys->pos_y = block_pos_y;
+            blocks[y][x]->phys->size_x = BLOCK_WIDTH;
+            blocks[y][x]->phys->size_y = BLOCK_HEIGHT;
+            blocks[y][x]->phys->step_x = 0;
+            blocks[y][x]->phys->step_y = 0;
+            blocks[y][x]->phys->delay = 0;
+            blocks[y][x]->phys->delay_counter = 0;
+            blocks[y][x]->phys->bounce = 0;
+            blocks[y][x]->phys->collided = NULL;
+            blocks[y][x]->phys->callback = NULL;
+            blocks[y][x]->phys->active = true;
             SDL_FillRect(blocks[y][x]->sprite, NULL, SDL_MapRGB(screen->format, row_colours_r[y], row_colours_g[y], row_colours_b[y]));
 
-            physics->add_object(blocks[y][x]);
+            physics->add_object(blocks[y][x]->phys);
 
             block_pos_x += BLOCK_WIDTH + BLOCK_SPACE_X;
         }
@@ -552,9 +332,9 @@ void breakout()
 
         if (!wait_for_input) {
             // Move left paddle
-            paddle->step_x = 0;
-            if (left) { paddle->step_x = -1; }
-            if (right) { paddle->step_x = 1; }
+            paddle->phys->step_x = 0;
+            if (left) { paddle->phys->step_x = -1; }
+            if (right) { paddle->phys->step_x = 1; }
 
             // Advance physics
             physics->advance();
@@ -587,20 +367,20 @@ void breakout()
         }
 
         // Ball
-        offset.x = ball->pos_x;
-        offset.y = ball->pos_y;
+        offset.x = ball->phys->pos_x;
+        offset.y = ball->phys->pos_y;
         SDL_BlitSurface(ball->sprite, NULL, screen, &offset);
 
         // Paddle
-        offset.x = paddle->pos_x;
-        offset.y = paddle->pos_y;
+        offset.x = paddle->phys->pos_x;
+        offset.y = paddle->phys->pos_y;
         SDL_BlitSurface(paddle->sprite, NULL, screen, &offset);
 
         for (int y = 0; y < NUM_BLOCKS_Y; y++) {
             for (int x = 0; x < NUM_BLOCKS_X; x++) {
-                if (blocks[y][x]->active) {
-                    offset.x = blocks[y][x]->pos_x;
-                    offset.y = blocks[y][x]->pos_y;
+                if (blocks[y][x]->phys->active) {
+                    offset.x = blocks[y][x]->phys->pos_x;
+                    offset.y = blocks[y][x]->phys->pos_y;
                     SDL_BlitSurface(blocks[y][x]->sprite, NULL, screen, &offset);
                 }
             }
