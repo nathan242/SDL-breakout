@@ -391,7 +391,19 @@ void breakout()
         SDL_Delay(2);
     }
 
+    SDL_Quit();
+
     delete physics;
+    delete paddle->phys;
+    delete paddle;
+    delete ball->phys;
+    delete ball;
+    for (int y = 0; y < NUM_BLOCKS_Y; y++) {
+        for (int x = 0; x < NUM_BLOCKS_X; x++) {
+            delete blocks[y][x]->phys;
+            delete blocks[y][x];
+        }
+    }
 
     return;
 }

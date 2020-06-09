@@ -168,13 +168,10 @@ phys::~phys()
     if (list_head != NULL) {
         obj_list *list = NULL;
         obj_list *prev = NULL;
-        phys_obj *obj = NULL;
 
         list = list_head;
 
         while (list != NULL) {
-            obj = list->obj;
-            delete obj;
             prev = list;
             list = list->next;
             delete prev;
