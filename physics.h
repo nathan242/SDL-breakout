@@ -1,3 +1,6 @@
+#ifndef PHYSICS_H
+#define PHYSICS_H
+
 #include <cstddef>
 
 struct phys_obj
@@ -45,4 +48,6 @@ class phys
         void advance();
         ~phys();
 };
+
+#endif
 

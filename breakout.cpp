@@ -1,6 +1,11 @@
 #include "physics.h"
+#include "render.h"
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
+
+#define RES_X 800
+#define RES_Y 600
+#define BPP 32
 
 #define NUM_BLOCKS_X 8
 #define NUM_BLOCKS_Y 5
@@ -12,7 +17,6 @@
 #define BLOCK_SPACE_Y_FIRST 100
 
 // Allocate surfaces
-SDL_Surface *screen = NULL;
 //SDL_Surface *numbers = NULL;
 SDL_Surface *press_a_key = NULL;
 //SDL_Surface *p2win = NULL;
@@ -23,20 +27,11 @@ SDL_Surface *press_a_key = NULL;
 // SDL event for handling input
 SDL_Event input;
 
-// SDL Rect for positioning sprites
-SDL_Rect offset;
-
 // Variables for player scores
 //int scoreplayer1;
 //int scoreplayer2;
 
 bool wait_for_input = false;
-
-struct game_obj
-{
-    SDL_Surface *sprite;
-    phys_obj *phys;
-};
 
 void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int area_x, int area_y)
 {
@@ -97,12 +92,6 @@ void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int are
 void breakout()
 {
     // Variables
-
-    // Constant variables
-    const int res_x = 800;
-    const int res_y = 600;
-    const int bpp = 32;
-
 /*
     // Variables for player scores
     scoreplayer1 = 0;
@@ -185,18 +174,13 @@ void breakout()
 
     wait_for_input = true;
 
-    // Initialize SDL
-    SDL_Init(SDL_INIT_VIDEO);
-    screen = SDL_SetVideoMode(res_x, res_y, bpp, SDL_HWSURFACE);
-    SDL_WM_SetCaption("SDL BREAKOUT", NULL);
-
-    // Set screen clearing colour
-    Uint32 clear_colour = SDL_MapRGB(screen->format, 0, 0, 0);
+    render *renderer = new render("SDL BREAKOUT", RES_X, RES_Y, BPP);
 
     // Game objects
     game_obj *paddle = new game_obj;
     game_obj *ball = new game_obj;
     game_obj *blocks[NUM_BLOCKS_Y][NUM_BLOCKS_X];
+    game_obj *press_a_key = new game_obj;
 
     int block_pos_x = BLOCK_SPACE_X_FIRST;
     int block_pos_y = BLOCK_SPACE_Y_FIRST;
@@ -220,7 +204,10 @@ void breakout()
     paddle->phys->collided = NULL;
     paddle->phys->callback = NULL;
     paddle->phys->active = true;
-    SDL_FillRect(paddle->sprite, NULL, SDL_MapRGB(screen->format, 255, 255, 255));
+    paddle->pos_x = &paddle->phys->pos_x;
+    paddle->pos_y = &paddle->phys->pos_y;
+    paddle->active = &paddle->phys->active;
+    SDL_FillRect(paddle->sprite, NULL, SDL_MapRGB(renderer->screen->format, 255, 255, 255));
 
     // Ball
     ball->sprite = SDL_CreateRGBSurface(0, 20, 20, 32, 0, 0, 0, 0);
@@ -237,18 +224,31 @@ void breakout()
     ball->phys->collided = NULL;
     ball->phys->callback = collision_callback;
     ball->phys->active = true;
-    SDL_FillRect(ball->sprite, NULL, SDL_MapRGB(screen->format, 255, 255, 255));
+    ball->pos_x = &ball->phys->pos_x;
+    ball->pos_y = &ball->phys->pos_y;
+    ball->active = &ball->phys->active;
+    SDL_FillRect(ball->sprite, NULL, SDL_MapRGB(renderer->screen->format, 255, 255, 255));
 
 
     // Load images
     //numbers = SDL_DisplayFormat(IMG_Load("numbers.png"));
-    press_a_key = SDL_DisplayFormat(IMG_Load("press_a_key.png"));
     //p2win = SDL_DisplayFormat(IMG_Load("p2win.png"));
+    press_a_key->sprite = SDL_DisplayFormat(IMG_Load("press_a_key.png"));
+    press_a_key->draw_pos_x = 306;
+    press_a_key->draw_pos_y = 290;
+    press_a_key->draw_active = false;
+    press_a_key->pos_x = &press_a_key->draw_pos_x;
+    press_a_key->pos_y = &press_a_key->draw_pos_y;
+    press_a_key->active = &press_a_key->draw_active;
 
     // Physics
-    phys *physics = new phys(res_x, res_y);
+    phys *physics = new phys(RES_X, RES_Y);
     physics->add_object(paddle->phys);
     physics->add_object(ball->phys);
+
+    renderer->add_object(paddle);
+    renderer->add_object(ball);
+    renderer->add_object(press_a_key);
 
     for (int y = 0; y < NUM_BLOCKS_Y; y++) {
         for (int x = 0; x < NUM_BLOCKS_X; x++) {
@@ -269,9 +269,13 @@ void breakout()
             blocks[y][x]->phys->collided = NULL;
             blocks[y][x]->phys->callback = NULL;
             blocks[y][x]->phys->active = true;
-            SDL_FillRect(blocks[y][x]->sprite, NULL, SDL_MapRGB(screen->format, row_colours_r[y], row_colours_g[y], row_colours_b[y]));
+            blocks[y][x]->pos_x = &blocks[y][x]->phys->pos_x;
+            blocks[y][x]->pos_y = &blocks[y][x]->phys->pos_y;
+            blocks[y][x]->active = &blocks[y][x]->phys->active;
+            SDL_FillRect(blocks[y][x]->sprite, NULL, SDL_MapRGB(renderer->screen->format, row_colours_r[y], row_colours_g[y], row_colours_b[y]));
 
             physics->add_object(blocks[y][x]->phys);
+            renderer->add_object(blocks[y][x]);
 
             block_pos_x += BLOCK_WIDTH + BLOCK_SPACE_X;
         }
@@ -344,9 +348,14 @@ void breakout()
             }
         }
 
+        if (wait_for_input) {
+            press_a_key->draw_active = true;
+        } else {
+            press_a_key->draw_active = false;
+        }
+
         // Redraw screen
-        // Clear screen
-        SDL_FillRect(screen, NULL, clear_colour);
+        renderer->draw(2);
 
 /*
         // First number
@@ -360,40 +369,18 @@ void breakout()
         SDL_BlitSurface(numbers, &num[scoreplayer2], screen, &offset );
 */
 
-        if (wait_for_input) {
-            offset.x = 306;
-            offset.y = 290;
-            SDL_BlitSurface(press_a_key, NULL, screen, &offset);
-        }
+//        if (wait_for_input) {
+//            offset.x = 306;
+//            offset.y = 290;
+//            SDL_BlitSurface(press_a_key, NULL, screen, &offset);
+//        }
 
-        // Ball
-        offset.x = ball->phys->pos_x;
-        offset.y = ball->phys->pos_y;
-        SDL_BlitSurface(ball->sprite, NULL, screen, &offset);
-
-        // Paddle
-        offset.x = paddle->phys->pos_x;
-        offset.y = paddle->phys->pos_y;
-        SDL_BlitSurface(paddle->sprite, NULL, screen, &offset);
-
-        for (int y = 0; y < NUM_BLOCKS_Y; y++) {
-            for (int x = 0; x < NUM_BLOCKS_X; x++) {
-                if (blocks[y][x]->phys->active) {
-                    offset.x = blocks[y][x]->phys->pos_x;
-                    offset.y = blocks[y][x]->phys->pos_y;
-                    SDL_BlitSurface(blocks[y][x]->sprite, NULL, screen, &offset);
-                }
-            }
-        }
-
-        // Flip screen
-        SDL_Flip(screen);
-        SDL_Delay(2);
     }
 
     SDL_Quit();
 
     delete physics;
+    delete renderer;
     delete paddle->phys;
     delete paddle;
     delete ball->phys;
