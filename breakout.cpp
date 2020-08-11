@@ -16,21 +16,8 @@
 #define BLOCK_SPACE_Y 4
 #define BLOCK_SPACE_Y_FIRST 100
 
-// Allocate surfaces
-//SDL_Surface *numbers = NULL;
 SDL_Surface *press_a_key = NULL;
-//SDL_Surface *p2win = NULL;
-
-// SDL Rect for positions of numbers in numbers.png
-//SDL_Rect num[11];
-
-// SDL event for handling input
 SDL_Event input;
-
-// Variables for player scores
-//int scoreplayer1;
-//int scoreplayer2;
-
 bool wait_for_input = false;
 
 void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int area_x, int area_y)
@@ -54,117 +41,10 @@ void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int are
             obj->step_x = -1;
         }
     }
-    /*
-    // Check if collision is with edge
-    if (obj2 == NULL) {
-        if (obj->pos_x <= 0) {
-            scoreplayer2++;
-            obj->pos_x = 300;
-            obj->pos_y = 100;
-            if (obj->step_y > 0) { obj->step_y = 1; } else { obj->step_y = -1; }
-        } else if (obj->pos_x+obj->size_x >= area_x) {
-            scoreplayer1++;
-            obj->pos_x = 300;
-            obj->pos_y = 100;
-            if (obj->step_y > 0) { obj->step_y = 1; } else { obj->step_y = -1; }
-        }
-    } else if (collide_axis == 1) {
-        int size = obj2->size_y+obj->size_y;
-        int point = obj2->pos_y-obj->size_y;
-        int seg = size/4;
-        int y1 = point+seg;
-        int y2 = y1+seg+seg;
-        int y3 = y2+seg;
-
-        if (obj->pos_y >= point) {
-            if (obj->pos_y <= y1) {
-                obj->step_y = -2;
-            } else if (obj->pos_y <= y2) {
-                if (obj->step_y > 0) { obj->step_y = 1; } else { obj->step_y = -1; }
-            } else if (obj->pos_y <= y3) {
-                obj->step_y = 2;
-            }
-        }
-    }
-    */
 }
 
 void breakout()
 {
-    // Variables
-/*
-    // Variables for player scores
-    scoreplayer1 = 0;
-    scoreplayer2 = 0;
-
-    // Positions for numbers.png
-    // 0
-    num[0].x = 0;
-    num[0].y = 0;
-    num[0].w = 50;
-    num[0].h = 50;
-
-    // 1
-    num[1].x = 50;
-    num[1].y = 0;
-    num[1].w = 50;
-    num[1].h = 50;
-
-    // 2
-    num[2].x = 100;
-    num[2].y = 0;
-    num[2].w = 50;
-    num[2].h = 50;
-
-    // 3
-    num[3].x = 150;
-    num[3].y = 0;
-    num[3].w = 50;
-    num[3].h = 50;
-
-    // 4
-    num[4].x = 200;
-    num[4].y = 0;
-    num[4].w = 50;
-    num[4].h = 50;
-
-    // 5
-    num[5].x = 250;
-    num[5].y = 0;
-    num[5].w = 50;
-    num[5].h = 50;
-
-    // 6
-    num[6].x = 300;
-    num[6].y = 0;
-    num[6].w = 50;
-    num[6].h = 50;
-
-    // 7
-    num[7].x = 350;
-    num[7].y = 0;
-    num[7].w = 50;
-    num[7].h = 50;
-
-    // 8
-    num[8].x = 400;
-    num[8].y = 0;
-    num[8].w = 50;
-    num[8].h = 50;
-
-    // 9
-    num[9].x = 450;
-    num[9].y = 0;
-    num[9].w = 50;
-    num[9].h = 50;
-
-    // 10
-    num[10].x = 450;
-    num[10].y = 0;
-    num[10].w = 50;
-    num[10].h = 50;
-*/
-
     // bool vars for control directions and quit event
     bool quit = false;
     bool left = false;
@@ -231,8 +111,6 @@ void breakout()
 
 
     // Load images
-    //numbers = SDL_DisplayFormat(IMG_Load("numbers.png"));
-    //p2win = SDL_DisplayFormat(IMG_Load("p2win.png"));
     press_a_key->sprite = SDL_DisplayFormat(IMG_Load("press_a_key.png"));
     press_a_key->draw_pos_x = 306;
     press_a_key->draw_pos_y = 290;
@@ -284,9 +162,6 @@ void breakout()
         block_pos_x = BLOCK_SPACE_X_FIRST;
     }
 
-    // Timer
-    //unsigned int timer = SDL_GetTicks();
-
     // Main loop
     while (quit==false)
     {
@@ -335,7 +210,7 @@ void breakout()
         }
 
         if (!wait_for_input) {
-            // Move left paddle
+            // Move paddle
             paddle->phys->step_x = 0;
             if (left) { paddle->phys->step_x = -1; }
             if (right) { paddle->phys->step_x = 1; }
@@ -356,25 +231,6 @@ void breakout()
 
         // Redraw screen
         renderer->draw(2);
-
-/*
-        // First number
-        offset.x = 200;
-        offset.y = 0;
-        SDL_BlitSurface(numbers, &num[scoreplayer1], screen, &offset );
-
-        // Second number
-        offset.x = 390;
-        offset.y = 0;
-        SDL_BlitSurface(numbers, &num[scoreplayer2], screen, &offset );
-*/
-
-//        if (wait_for_input) {
-//            offset.x = 306;
-//            offset.y = 290;
-//            SDL_BlitSurface(press_a_key, NULL, screen, &offset);
-//        }
-
     }
 
     SDL_Quit();
