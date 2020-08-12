@@ -1,6 +1,6 @@
-#include "render.h"
+#include "graphics.h"
 
-render::render(const char* caption, int res_x, int res_y, int bpp)
+graphics::graphics(const char* caption, int res_x, int res_y, int bpp)
 {
     // Initialize SDL
     SDL_Init(SDL_INIT_VIDEO);
@@ -14,7 +14,7 @@ render::render(const char* caption, int res_x, int res_y, int bpp)
     list_head = NULL;
 }
 
-int render::add_object(game_obj *obj)
+int graphics::add_object(graphics_obj *obj)
 {
     obj_list *list = new obj_list;
     list->obj = obj;
@@ -35,9 +35,9 @@ int render::add_object(game_obj *obj)
     return ++list_len;
 }
 
-void render::draw(int delay) {
+void graphics::draw(int delay) {
     obj_list *list = NULL;
-    game_obj *obj = NULL;
+    graphics_obj *obj = NULL;
 
     list = list_head;
 
@@ -63,7 +63,7 @@ void render::draw(int delay) {
     SDL_Delay(delay);
 }
 
-render::~render()
+graphics::~graphics()
 {
     if (list_head != NULL) {
         obj_list *list = NULL;

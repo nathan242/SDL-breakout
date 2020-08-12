@@ -1,13 +1,11 @@
-#ifndef RENDER_H
-#define RENDER_H
+#ifndef GRAPHICS_H
+#define GRAPHICS_H
 
-#include "physics.h"
 #include <SDL/SDL.h>
 
-struct game_obj
+struct graphics_obj
 {
     SDL_Surface *sprite;
-    phys_obj *phys;
 
     int *pos_x;
     int *pos_y;
@@ -18,7 +16,7 @@ struct game_obj
     bool draw_active;
 };
 
-class render
+class graphics
 {
     private:
         SDL_Rect offset;
@@ -28,7 +26,7 @@ class render
 
         struct obj_list
         {
-            game_obj *obj;
+            graphics_obj *obj;
             obj_list *next;
         };
         obj_list *list_head;
@@ -36,10 +34,10 @@ class render
     public:
         SDL_Surface *screen;
 
-        render(const char* caption, int res_x, int res_y, int bpp);
-        int add_object(game_obj *obj);
+        graphics(const char* caption, int res_x, int res_y, int bpp);
+        int add_object(graphics_obj *obj);
         void draw(int delay);
-        ~render();
+        ~graphics();
 };
 
 #endif
