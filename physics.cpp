@@ -32,6 +32,7 @@ int phys::add_object(phys_obj *obj)
     return ++list_len;
 }
 
+/*
 void phys::advance()
 {
     obj_list *list = NULL;
@@ -61,7 +62,50 @@ void phys::advance()
         // Get next
         list = list->next;
     }
-    
+}
+*/
+
+void phys::advance()
+{
+    obj_list *list = NULL;
+    phys_obj *obj = NULL;
+
+    list = list_head;
+
+    while (list != NULL) {
+        // Get object
+        obj = list->obj;
+
+        if (obj->active) {
+            // Check if object is colliding with another
+            check_collide(obj, list->id);
+        }
+
+        // Get next
+        list = list->next;
+    }
+
+    list = list_head;
+
+    while (list != NULL) {
+        // Get object
+        obj = list->obj;
+
+        if (obj->active) {
+            // Move object
+            if (obj->delay_counter == obj->delay) {
+                obj->pos_x += obj->step_x;
+                obj->pos_y += obj->step_y;
+
+                obj->delay_counter = 0;
+            } else {
+                obj->delay_counter++;
+            }
+        }
+
+        // Get next
+        list = list->next;
+    }
 }
 
 void phys::check_collide(phys_obj *obj, int id)
@@ -117,7 +161,7 @@ void phys::check_collide(phys_obj *obj, int id)
                             if ((obj->step_x > 0 && obj->pos_x < obj2->pos_x) || (obj->step_x < 0 && obj->pos_x > obj2->pos_x)) {
                                 obj->step_x = obj->step_x*-1;
                             }
-                        } else {
+                        } else if (obj->bounce == 0) {
                             obj->step_x = 0;
                             obj->step_y = 0;
                         }
@@ -127,7 +171,7 @@ void phys::check_collide(phys_obj *obj, int id)
                             if ((obj->step_y > 0 && obj->pos_y < obj2->pos_y) || (obj->step_y < 0 && obj->pos_y > obj2->pos_y)) {
                                 obj->step_y = obj->step_y*-1;
                             }
-                        } else {
+                        } else if (obj->bounce == 0) {
                             obj->step_x = 0;
                             obj->step_y = 0;
                         }
@@ -144,19 +188,19 @@ void phys::check_collide(phys_obj *obj, int id)
 
     // Check collision with edges
     if (obj->pos_x >= area_x-obj->size_x || obj->pos_x <= 0) { 
-        if (obj->callback != NULL) { obj->callback(obj, NULL, 0, area_x, area_y); }
+        if (obj->callback != NULL) { obj->callback(obj, NULL, 1, area_x, area_y); }
         if (obj->bounce > 0) {
             obj->step_x = obj->step_x*-1;
-        } else if (obj->pos_x >= area_x-obj->size_x && obj->step_x > 0 || obj->pos_x <= 0 && obj->step_x < 0) {
+        } else if (obj->bounce == 0 && (obj->pos_x >= area_x-obj->size_x && obj->step_x > 0 || obj->pos_x <= 0 && obj->step_x < 0)) {
             obj->step_x = 0;
             obj->step_y = 0;
         }
     }
     if (obj->pos_y >= area_y-obj->size_y || obj->pos_y <= 0) {
-        if (obj->callback != NULL) { obj->callback(obj, NULL, 0, area_x, area_y); }
+        if (obj->callback != NULL) { obj->callback(obj, NULL, 2, area_x, area_y); }
         if (obj->bounce > 0) {
             obj->step_y = obj->step_y*-1;
-        } else if (obj->pos_y >= area_y-obj->size_y && obj->step_y > 0 || obj->pos_y <= 0 && obj->step_y < 0) {
+        } else if (obj->bounce == 0 && (obj->pos_y >= area_y-obj->size_y && obj->step_y > 0 || obj->pos_y <= 0 && obj->step_y < 0)) {
             obj->step_x = 0;
             obj->step_y = 0;
         }

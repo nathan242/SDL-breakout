@@ -5,6 +5,8 @@
 
 struct phys_obj
 {
+    int type_id;
+
     int pos_x;
     int pos_y;
 
