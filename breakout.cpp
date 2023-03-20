@@ -13,11 +13,15 @@
 #define BLOCK_SPACE_X 4
 #define BLOCK_SPACE_Y 4
 
+#define MAX_LIVES 3
+#define MAX_LEVELS 3
+
 SDL_Surface *press_a_key = NULL;
 SDL_Event input;
 bool wait_for_input = false;
 bool is_game_over = false;
 bool level_changed = false;
+bool life_lost = false;
 int lives;
 int level;
 int block_count;
@@ -33,6 +37,7 @@ void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int are
             if (--lives == 0) {
                 is_game_over = true;
             } else {
+                life_lost = true;
                 wait_for_input = true;
             }
         }
@@ -206,6 +211,8 @@ void breakout()
     lives = 3;
     level = 0;
     block_count = NUM_BLOCKS;
+    char num_image[] = "x.png";
+    char num_str[2];
 
     graphics *window = new graphics("SDL BREAKOUT", RES_X, RES_Y, BPP);
 
@@ -218,6 +225,10 @@ void breakout()
     phys_obj *blocks_phys[NUM_BLOCKS];
     graphics_obj *press_a_key = new graphics_obj;
     graphics_obj *game_over = new graphics_obj;
+    graphics_obj *level_text = new graphics_obj;
+    graphics_obj *lives_text = new graphics_obj;
+    graphics_obj *level_num[MAX_LEVELS];
+    graphics_obj *lives_num[MAX_LIVES];
 
     // Paddle
     paddle_phys->pos_x = 50;
@@ -258,20 +269,69 @@ void breakout()
     SDL_FillRect(ball->sprite, NULL, SDL_MapRGB(window->screen->format, 255, 255, 255));
 
     // Load images
-    press_a_key->sprite = SDL_DisplayFormat(IMG_Load("press_a_key.png"));
+    press_a_key->sprite = SDL_DisplayFormatAlpha(IMG_Load("press_a_key.png"));
     press_a_key->draw_pos_x = 294;
     press_a_key->draw_pos_y = 290;
     press_a_key->draw_active = false;
     press_a_key->pos_x = &press_a_key->draw_pos_x;
     press_a_key->pos_y = &press_a_key->draw_pos_y;
     press_a_key->active = &press_a_key->draw_active;
-    game_over->sprite = SDL_DisplayFormat(IMG_Load("game_over.png"));
+
+    game_over->sprite = SDL_DisplayFormatAlpha(IMG_Load("game_over.png"));
     game_over->draw_pos_x = 343;
     game_over->draw_pos_y = 290;
     game_over->draw_active = false;
     game_over->pos_x = &game_over->draw_pos_x;
     game_over->pos_y = &game_over->draw_pos_y;
     game_over->active = &game_over->draw_active;
+
+    level_text->sprite = SDL_DisplayFormatAlpha(IMG_Load("level.png"));
+    level_text->draw_pos_x = 718;
+    level_text->draw_pos_y = 0;
+    level_text->draw_active = true;
+    level_text->pos_x = &level_text->draw_pos_x;
+    level_text->pos_y = &level_text->draw_pos_y;
+    level_text->active = &level_text->draw_active;
+
+    lives_text->sprite = SDL_DisplayFormatAlpha(IMG_Load("lives.png"));
+    lives_text->draw_pos_x = 634;
+    lives_text->draw_pos_y = 0;
+    lives_text->draw_active = true;
+    lives_text->pos_x = &lives_text->draw_pos_x;
+    lives_text->pos_y = &lives_text->draw_pos_y;
+    lives_text->active = &lives_text->draw_active;
+
+    for (int x = 0; x < MAX_LEVELS; x++) {
+        sprintf(num_str, "%d", x+1);
+        num_image[0] = num_str[0];
+
+        level_num[x] = new graphics_obj;
+        level_num[x]->sprite = SDL_DisplayFormatAlpha(IMG_Load(num_image));
+        level_num[x]->draw_pos_x = 788;
+        level_num[x]->draw_pos_y = 0;
+        level_num[x]->draw_active = false;
+        level_num[x]->pos_x = &level_num[x]->draw_pos_x;
+        level_num[x]->pos_y = &level_num[x]->draw_pos_y;
+        level_num[x]->active = &level_num[x]->draw_active;
+
+        window->add_object(level_num[x]);
+    }
+
+    for (int x = 0; x < MAX_LIVES; x++) {
+        sprintf(num_str, "%d", x+1);
+        num_image[0] = num_str[0];
+
+        lives_num[x] = new graphics_obj;
+        lives_num[x]->sprite = SDL_DisplayFormatAlpha(IMG_Load(num_image));
+        lives_num[x]->draw_pos_x = 702;
+        lives_num[x]->draw_pos_y = 0;
+        lives_num[x]->draw_active = false;
+        lives_num[x]->pos_x = &lives_num[x]->draw_pos_x;
+        lives_num[x]->pos_y = &lives_num[x]->draw_pos_y;
+        lives_num[x]->active = &lives_num[x]->draw_active;
+
+        window->add_object(lives_num[x]);
+    }
 
     // Physics
     phys *physics = new phys(RES_X, RES_Y);
@@ -290,7 +350,11 @@ void breakout()
     window->add_object(ball);
     window->add_object(press_a_key);
     window->add_object(game_over);
+    window->add_object(level_text);
+    window->add_object(lives_text);
 
+    level_num[0]->draw_active = true;
+    lives_num[lives-1]->draw_active = true;
     setup_blocks_level_0(window, blocks_phys, blocks);
 
     // Main loop
@@ -354,11 +418,29 @@ void breakout()
                     break;
                 default:
                     level = 0;
+
+                    for (int x = 0; x < MAX_LEVELS; x++) {
+                        level_num[x]->draw_active = false;
+                    }
+
                     setup_blocks_level_0(window, blocks_phys, blocks);
+            }
+
+            level_num[level]->draw_active = true;
+
+            if (level != 0) {
+                level_num[level-1]->draw_active = false;
             }
         }
 
         if (!is_game_over) {
+            if (life_lost) {
+                life_lost = false;
+
+                lives_num[lives-1]->draw_active = true;
+                lives_num[lives]->draw_active = false;
+            }
+
             if (!wait_for_input) {
                 // Move paddle
                 paddle_phys->step_x = 0;
@@ -392,9 +474,22 @@ void breakout()
     delete paddle;
     delete ball_phys;
     delete ball;
+    delete press_a_key;
+    delete game_over;
+    delete level_text;
+    delete lives_text;
+
     for (int x = 0; x < NUM_BLOCKS; x++) {
         delete blocks_phys[x];
         delete blocks[x];
+    }
+
+    for (int x = 0; x < MAX_LEVELS; x++) {
+        delete level_num[x];
+    }
+
+    for (int x = 0; x < MAX_LIVES; x++) {
+        delete lives_num[x];
     }
 
     return;
