@@ -32,7 +32,6 @@ void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int are
         if (obj->pos_y+obj->size_y >= area_y) {
             obj->pos_x = 100;
             obj->pos_y = 500;
-            obj->step_x = 1;
 
             if (--lives == 0) {
                 is_game_over = true;
@@ -50,8 +49,6 @@ void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int are
             level_changed = true;
             obj->pos_x = 100;
             obj->pos_y = 500;
-            obj->step_x = 1;
-            obj->step_y = -1;
             wait_for_input = true;
         }
     } else {
@@ -450,6 +447,9 @@ void breakout()
                 // Advance physics
                 physics->advance();
             } else if (left || right || up || down) {
+                // Reset ball direction
+                ball_phys->step_x = 1;
+                ball_phys->step_y = -1;
                 wait_for_input = false;
             }
         }
