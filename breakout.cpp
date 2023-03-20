@@ -19,6 +19,7 @@
 SDL_Surface *press_a_key = NULL;
 SDL_Event input;
 bool wait_for_input = false;
+bool input_released = false;
 bool is_game_over = false;
 bool level_changed = false;
 bool life_lost = false;
@@ -37,6 +38,7 @@ void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int are
                 is_game_over = true;
             } else {
                 life_lost = true;
+                input_released = false;
                 wait_for_input = true;
             }
         }
@@ -49,6 +51,7 @@ void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int are
             level_changed = true;
             obj->pos_x = 100;
             obj->pos_y = 500;
+            input_released = false;
             wait_for_input = true;
         }
     } else {
@@ -446,11 +449,13 @@ void breakout()
 
                 // Advance physics
                 physics->advance();
-            } else if (left || right || up || down) {
+            } else if (input_released && (left || right || up || down)) {
                 // Reset ball direction
                 ball_phys->step_x = 1;
                 ball_phys->step_y = -1;
                 wait_for_input = false;
+            } else if (!left && !right && !up && !down) {
+                input_released = true;
             }
         }
 
