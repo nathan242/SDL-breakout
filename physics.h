@@ -15,9 +15,13 @@ struct phys_obj
 
     int step_x;
     int step_y;
+    int step_x_delay;
+    int step_y_delay;
+    int step_x_delay_count;
+    int step_y_delay_count;
 
     int delay;
-    int delay_counter;
+    int delay_count;
 
     int bounce;
     phys_obj *collided;

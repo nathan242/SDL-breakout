@@ -4,7 +4,7 @@ graphics::graphics(const char* caption, int res_x, int res_y, int bpp)
 {
     // Initialize SDL
     SDL_Init(SDL_INIT_VIDEO);
-    screen = SDL_SetVideoMode(res_x, res_y, bpp, SDL_HWSURFACE);
+    screen = SDL_SetVideoMode(res_x, res_y, bpp, SDL_HWSURFACE|SDL_DOUBLEBUF);
     SDL_WM_SetCaption(caption, NULL);
 
     // Set screen clearing colour

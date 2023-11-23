@@ -57,12 +57,18 @@ void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int are
     } else {
         if (obj->pos_x <= obj2->pos_x+20) {
             obj->step_x = -2;
-        } else if (obj->pos_x >= obj2->pos_x+80) {
+        } else if (obj->pos_x >= obj2->pos_x+60) {
             obj->step_x = 2;
         } else if (obj->step_x == 2) {
             obj->step_x = 1;
         } else if (obj->step_x == -2) {
             obj->step_x = -1;
+        }
+
+        if ((obj->pos_x >= obj2->pos_x+21 && obj->pos_x <= obj2->pos_x+35) || (obj->pos_x >= obj2->pos_x+45 && obj->pos_x <= obj2->pos_x+59)) {
+            obj->step_x_delay = 0;
+        } else if (obj->pos_x >= obj2->pos_x+36 && obj->pos_x <= obj2->pos_x+44) {
+            obj->step_x_delay = 1;
         }
     }
 }
@@ -89,7 +95,11 @@ void setup_blocks_level_0(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks_phys[block_id]->step_x = 0;
             blocks_phys[block_id]->step_y = 0;
             blocks_phys[block_id]->delay = 0;
-            blocks_phys[block_id]->delay_counter = 0;
+            blocks_phys[block_id]->delay_count = 0;
+            blocks_phys[block_id]->step_x_delay = 0;
+            blocks_phys[block_id]->step_y_delay = 0;
+            blocks_phys[block_id]->step_x_delay_count = 0;
+            blocks_phys[block_id]->step_y_delay_count = 0;
             blocks_phys[block_id]->bounce = 0;
             blocks_phys[block_id]->collided = NULL;
             blocks_phys[block_id]->callback = NULL;
@@ -134,7 +144,11 @@ void setup_blocks_level_1(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks_phys[block_id]->step_x = 0;
             blocks_phys[block_id]->step_y = 0;
             blocks_phys[block_id]->delay = 0;
-            blocks_phys[block_id]->delay_counter = 0;
+            blocks_phys[block_id]->delay_count = 0;
+            blocks_phys[block_id]->step_x_delay = 0;
+            blocks_phys[block_id]->step_y_delay = 0;
+            blocks_phys[block_id]->step_x_delay_count = 0;
+            blocks_phys[block_id]->step_y_delay_count = 0;
             blocks_phys[block_id]->bounce = 0;
             blocks_phys[block_id]->collided = NULL;
             blocks_phys[block_id]->callback = NULL;
@@ -179,7 +193,11 @@ void setup_blocks_level_2(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks_phys[block_id]->step_x = y % 2;
             blocks_phys[block_id]->step_y = 0;
             blocks_phys[block_id]->delay = 0;
-            blocks_phys[block_id]->delay_counter = 0;
+            blocks_phys[block_id]->delay_count = 0;
+            blocks_phys[block_id]->step_x_delay = 0;
+            blocks_phys[block_id]->step_y_delay = 0;
+            blocks_phys[block_id]->step_x_delay_count = 0;
+            blocks_phys[block_id]->step_y_delay_count = 0;
             blocks_phys[block_id]->bounce = 1;
             blocks_phys[block_id]->collided = NULL;
             blocks_phys[block_id]->callback = NULL;
@@ -238,7 +256,11 @@ void breakout()
     paddle_phys->step_x = 0;
     paddle_phys->step_y = 0;
     paddle_phys->delay = 0;
-    paddle_phys->delay_counter = 0;
+    paddle_phys->delay_count = 0;
+    paddle_phys->step_x_delay = 0;
+    paddle_phys->step_y_delay = 0;
+    paddle_phys->step_x_delay_count = 0;
+    paddle_phys->step_y_delay_count = 0;
     paddle_phys->bounce = 0;
     paddle_phys->collided = NULL;
     paddle_phys->callback = NULL;
@@ -257,7 +279,11 @@ void breakout()
     ball_phys->step_x = 1;
     ball_phys->step_y = -1;
     ball_phys->delay = 0;
-    ball_phys->delay_counter = 0;
+    ball_phys->delay_count = 0;
+    ball_phys->step_x_delay = 0;
+    ball_phys->step_y_delay = 0;
+    ball_phys->step_x_delay_count = 0;
+    ball_phys->step_y_delay_count = 0;
     ball_phys->bounce = 1;
     ball_phys->collided = NULL;
     ball_phys->callback = collision_callback;
@@ -453,6 +479,7 @@ void breakout()
                 // Reset ball direction
                 ball_phys->step_x = 1;
                 ball_phys->step_y = -1;
+                ball_phys->step_x_delay = 0;
                 wait_for_input = false;
             } else if (!left && !right && !up && !down) {
                 input_released = true;
