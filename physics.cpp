@@ -60,15 +60,15 @@ void phys::advance()
 
         if (obj->active) {
             // Move object
-            if (obj->delay_count == obj->delay) {
-                if (obj->step_x_delay_count == obj->step_x_delay) {
+            if (obj->delay_count >= obj->delay) {
+                if (obj->step_x_delay_count >= obj->step_x_delay) {
                     obj->pos_x += obj->step_x;
                     obj->step_x_delay_count = 0;
                 } else {
                     obj->step_x_delay_count++;
                 }
 
-                if (obj->step_y_delay_count == obj->step_y_delay) {
+                if (obj->step_y_delay_count >= obj->step_y_delay) {
                     obj->pos_y += obj->step_y;
                     obj->step_y_delay_count = 0;
                 } else {
