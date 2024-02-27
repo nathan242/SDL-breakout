@@ -104,7 +104,6 @@ void setup_blocks_level_0(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks_phys[block_id]->collided = NULL;
             blocks_phys[block_id]->callback = NULL;
             blocks_phys[block_id]->active = true;
-            blocks[block_id]->sprite = SDL_CreateRGBSurface(0, BLOCK_WIDTH, BLOCK_HEIGHT, 32, 0, 0, 0, 0);
             blocks[block_id]->pos_x = &blocks_phys[block_id]->pos_x;
             blocks[block_id]->pos_y = &blocks_phys[block_id]->pos_y;
             blocks[block_id]->active = &blocks_phys[block_id]->active;
@@ -153,7 +152,6 @@ void setup_blocks_level_1(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks_phys[block_id]->collided = NULL;
             blocks_phys[block_id]->callback = NULL;
             blocks_phys[block_id]->active = true;
-            blocks[block_id]->sprite = SDL_CreateRGBSurface(0, BLOCK_WIDTH, BLOCK_HEIGHT, 32, 0, 0, 0, 0);
             blocks[block_id]->pos_x = &blocks_phys[block_id]->pos_x;
             blocks[block_id]->pos_y = &blocks_phys[block_id]->pos_y;
             blocks[block_id]->active = &blocks_phys[block_id]->active;
@@ -202,7 +200,6 @@ void setup_blocks_level_2(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks_phys[block_id]->collided = NULL;
             blocks_phys[block_id]->callback = NULL;
             blocks_phys[block_id]->active = true;
-            blocks[block_id]->sprite = SDL_CreateRGBSurface(0, BLOCK_WIDTH, BLOCK_HEIGHT, 32, 0, 0, 0, 0);
             blocks[block_id]->pos_x = &blocks_phys[block_id]->pos_x;
             blocks[block_id]->pos_y = &blocks_phys[block_id]->pos_y;
             blocks[block_id]->active = &blocks_phys[block_id]->active;
@@ -366,6 +363,7 @@ void breakout()
         blocks_phys[x] = new phys_obj;
         physics->add_object(blocks_phys[x]);
         blocks[x] = new graphics_obj;
+        blocks[x]->sprite = SDL_CreateRGBSurface(0, BLOCK_WIDTH, BLOCK_HEIGHT, 32, 0, 0, 0, 0);
         window->add_object(blocks[x]);
     }
 
