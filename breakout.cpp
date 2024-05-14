@@ -1,7 +1,7 @@
 #include "physics.h"
 #include "graphics.h"
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #define RES_X 800
 #define RES_Y 600
@@ -16,7 +16,9 @@
 #define MAX_LIVES 3
 #define MAX_LEVELS 3
 
-SDL_Surface *press_a_key = NULL;
+#define REDRAW_DELAY 4
+
+// SDL_Surface *press_a_key = NULL;
 SDL_Event input;
 bool wait_for_input = false;
 bool input_released = false;
@@ -107,7 +109,13 @@ void setup_blocks_level_0(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks[block_id]->pos_x = &blocks_phys[block_id]->pos_x;
             blocks[block_id]->pos_y = &blocks_phys[block_id]->pos_y;
             blocks[block_id]->active = &blocks_phys[block_id]->active;
-            SDL_FillRect(blocks[block_id]->sprite, NULL, SDL_MapRGB(window->screen->format, row_colours_r[y], row_colours_g[y], row_colours_b[y]));
+            SDL_FillRect(blocks[block_id]->sprite, NULL, SDL_MapRGB(blocks[block_id]->sprite->format, row_colours_r[y], row_colours_g[y], row_colours_b[y]));
+
+            if (blocks[block_id]->texture != NULL) {
+                SDL_DestroyTexture(blocks[block_id]->texture);
+            }
+
+            blocks[block_id]->texture = SDL_CreateTextureFromSurface(window->renderer, blocks[block_id]->sprite);
 
             block_pos_x += BLOCK_WIDTH + BLOCK_SPACE_X;
         }
@@ -155,7 +163,13 @@ void setup_blocks_level_1(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks[block_id]->pos_x = &blocks_phys[block_id]->pos_x;
             blocks[block_id]->pos_y = &blocks_phys[block_id]->pos_y;
             blocks[block_id]->active = &blocks_phys[block_id]->active;
-            SDL_FillRect(blocks[block_id]->sprite, NULL, SDL_MapRGB(window->screen->format, row_colours_r[y], row_colours_g[y], row_colours_b[y]));
+            SDL_FillRect(blocks[block_id]->sprite, NULL, SDL_MapRGB(blocks[block_id]->sprite->format, row_colours_r[y], row_colours_g[y], row_colours_b[y]));
+
+            if (blocks[block_id]->texture != NULL) {
+                SDL_DestroyTexture(blocks[block_id]->texture);
+            }
+
+            blocks[block_id]->texture = SDL_CreateTextureFromSurface(window->renderer, blocks[block_id]->sprite);
 
             block_pos_x += BLOCK_WIDTH + BLOCK_SPACE_X + BLOCK_WIDTH + BLOCK_SPACE_X;
         }
@@ -203,7 +217,13 @@ void setup_blocks_level_2(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks[block_id]->pos_x = &blocks_phys[block_id]->pos_x;
             blocks[block_id]->pos_y = &blocks_phys[block_id]->pos_y;
             blocks[block_id]->active = &blocks_phys[block_id]->active;
-            SDL_FillRect(blocks[block_id]->sprite, NULL, SDL_MapRGB(window->screen->format, row_colours_r[y], row_colours_g[y], row_colours_b[y]));
+            SDL_FillRect(blocks[block_id]->sprite, NULL, SDL_MapRGB(blocks[block_id]->sprite->format, row_colours_r[y], row_colours_g[y], row_colours_b[y]));
+
+            if (blocks[block_id]->texture != NULL) {
+                SDL_DestroyTexture(blocks[block_id]->texture);
+            }
+
+            blocks[block_id]->texture = SDL_CreateTextureFromSurface(window->renderer, blocks[block_id]->sprite);
 
             block_pos_x += BLOCK_WIDTH + BLOCK_SPACE_X + BLOCK_WIDTH + BLOCK_SPACE_X;
         }
@@ -265,8 +285,11 @@ void breakout()
     paddle->sprite = SDL_CreateRGBSurface(0, 100, 20, 32, 0, 0, 0, 0);
     paddle->pos_x = &paddle_phys->pos_x;
     paddle->pos_y = &paddle_phys->pos_y;
+    paddle->size_x = 100;
+    paddle->size_y = 20;
     paddle->active = &paddle_phys->active;
-    SDL_FillRect(paddle->sprite, NULL, SDL_MapRGB(window->screen->format, 255, 255, 255));
+    SDL_FillRect(paddle->sprite, NULL, SDL_MapRGB(paddle->sprite->format, 255, 255, 255));
+    paddle->texture = SDL_CreateTextureFromSurface(window->renderer, paddle->sprite);
 
     // Ball
     ball_phys->pos_x = 100;
@@ -288,40 +311,55 @@ void breakout()
     ball->sprite = SDL_CreateRGBSurface(0, 20, 20, 32, 0, 0, 0, 0);
     ball->pos_x = &ball_phys->pos_x;
     ball->pos_y = &ball_phys->pos_y;
+    ball->size_x = 20;
+    ball->size_y = 20;
     ball->active = &ball_phys->active;
-    SDL_FillRect(ball->sprite, NULL, SDL_MapRGB(window->screen->format, 255, 255, 255));
+    SDL_FillRect(ball->sprite, NULL, SDL_MapRGB(ball->sprite->format, 255, 255, 255));
+    ball->texture = SDL_CreateTextureFromSurface(window->renderer, paddle->sprite);
 
     // Load images
-    press_a_key->sprite = SDL_DisplayFormatAlpha(IMG_Load("press_a_key.png"));
+    press_a_key->sprite = IMG_Load("press_a_key.png");
+    press_a_key->texture = SDL_CreateTextureFromSurface(window->renderer, press_a_key->sprite);
     press_a_key->draw_pos_x = 294;
     press_a_key->draw_pos_y = 290;
     press_a_key->draw_active = false;
     press_a_key->pos_x = &press_a_key->draw_pos_x;
     press_a_key->pos_y = &press_a_key->draw_pos_y;
+    press_a_key->size_x = 212;
+    press_a_key->size_y = 20;
     press_a_key->active = &press_a_key->draw_active;
 
-    game_over->sprite = SDL_DisplayFormatAlpha(IMG_Load("game_over.png"));
+    game_over->sprite = IMG_Load("game_over.png");
+    game_over->texture = SDL_CreateTextureFromSurface(window->renderer, game_over->sprite);
     game_over->draw_pos_x = 343;
     game_over->draw_pos_y = 290;
     game_over->draw_active = false;
     game_over->pos_x = &game_over->draw_pos_x;
     game_over->pos_y = &game_over->draw_pos_y;
+    game_over->size_x = 115;
+    game_over->size_y = 20;
     game_over->active = &game_over->draw_active;
 
-    level_text->sprite = SDL_DisplayFormatAlpha(IMG_Load("level.png"));
+    level_text->sprite = IMG_Load("level.png");
+    level_text->texture = SDL_CreateTextureFromSurface(window->renderer, level_text->sprite);
     level_text->draw_pos_x = 718;
     level_text->draw_pos_y = 0;
     level_text->draw_active = true;
     level_text->pos_x = &level_text->draw_pos_x;
     level_text->pos_y = &level_text->draw_pos_y;
+    level_text->size_x = 68;
+    level_text->size_y = 20;
     level_text->active = &level_text->draw_active;
 
-    lives_text->sprite = SDL_DisplayFormatAlpha(IMG_Load("lives.png"));
+    lives_text->sprite = IMG_Load("lives.png");
+    lives_text->texture = SDL_CreateTextureFromSurface(window->renderer, lives_text->sprite);
     lives_text->draw_pos_x = 634;
     lives_text->draw_pos_y = 0;
     lives_text->draw_active = true;
     lives_text->pos_x = &lives_text->draw_pos_x;
     lives_text->pos_y = &lives_text->draw_pos_y;
+    lives_text->size_x = 66;
+    lives_text->size_y = 20;
     lives_text->active = &lives_text->draw_active;
 
     for (int x = 0; x < MAX_LEVELS; x++) {
@@ -329,12 +367,15 @@ void breakout()
         num_image[0] = num_str[0];
 
         level_num[x] = new graphics_obj;
-        level_num[x]->sprite = SDL_DisplayFormatAlpha(IMG_Load(num_image));
+        level_num[x]->sprite = IMG_Load(num_image);
+        level_num[x]->texture = SDL_CreateTextureFromSurface(window->renderer, level_num[x]->sprite);
         level_num[x]->draw_pos_x = 788;
         level_num[x]->draw_pos_y = 0;
         level_num[x]->draw_active = false;
         level_num[x]->pos_x = &level_num[x]->draw_pos_x;
         level_num[x]->pos_y = &level_num[x]->draw_pos_y;
+        level_num[x]->size_x = 12;
+        level_num[x]->size_y = 20;
         level_num[x]->active = &level_num[x]->draw_active;
 
         window->add_object(level_num[x]);
@@ -345,12 +386,15 @@ void breakout()
         num_image[0] = num_str[0];
 
         lives_num[x] = new graphics_obj;
-        lives_num[x]->sprite = SDL_DisplayFormatAlpha(IMG_Load(num_image));
+        lives_num[x]->sprite = IMG_Load(num_image);
+        lives_num[x]->texture = SDL_CreateTextureFromSurface(window->renderer, lives_num[x]->sprite);
         lives_num[x]->draw_pos_x = 702;
         lives_num[x]->draw_pos_y = 0;
         lives_num[x]->draw_active = false;
         lives_num[x]->pos_x = &lives_num[x]->draw_pos_x;
         lives_num[x]->pos_y = &lives_num[x]->draw_pos_y;
+        lives_num[x]->size_x = 12;
+        lives_num[x]->size_y = 20;
         lives_num[x]->active = &lives_num[x]->draw_active;
 
         window->add_object(lives_num[x]);
@@ -364,6 +408,9 @@ void breakout()
         physics->add_object(blocks_phys[x]);
         blocks[x] = new graphics_obj;
         blocks[x]->sprite = SDL_CreateRGBSurface(0, BLOCK_WIDTH, BLOCK_HEIGHT, 32, 0, 0, 0, 0);
+        blocks[x]->texture = NULL;
+        blocks[x]->size_x = BLOCK_WIDTH;
+        blocks[x]->size_y = BLOCK_HEIGHT;
         window->add_object(blocks[x]);
     }
 
@@ -493,7 +540,7 @@ void breakout()
         }
 
         // Redraw screen
-        window->draw(2);
+        window->draw(REDRAW_DELAY);
     }
 
     SDL_Quit();

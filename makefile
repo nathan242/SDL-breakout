@@ -1,12 +1,12 @@
 breakout: breakout.o physics.o graphics.o
-	g++ `sdl-config --cflags` -o breakout -L/usr/local/lib/ -lSDL -lSDL_image breakout.o physics.o graphics.o
+	g++ -g -o breakout breakout.o physics.o graphics.o `sdl2-config --libs` -lSDL2_image
 
 breakout.o: breakout.cpp
-	g++ `sdl-config --cflags` -c breakout.cpp
+	g++ -g `sdl2-config --cflags` -c breakout.cpp
 
 physics.o: physics.cpp physics.h
-	g++ -c physics.cpp
+	g++ -g -c physics.cpp
 
 graphics.o: graphics.cpp graphics.h
-	g++ `sdl-config --cflags` -c graphics.cpp
+	g++ -g `sdl2-config --cflags` -c graphics.cpp
 

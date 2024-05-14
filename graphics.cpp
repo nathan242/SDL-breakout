@@ -4,14 +4,14 @@ graphics::graphics(const char* caption, int res_x, int res_y, int bpp)
 {
     // Initialize SDL
     SDL_Init(SDL_INIT_VIDEO);
-    screen = SDL_SetVideoMode(res_x, res_y, bpp, SDL_HWSURFACE|SDL_DOUBLEBUF);
-    SDL_WM_SetCaption(caption, NULL);
-
-    // Set screen clearing colour
-    clear_colour = SDL_MapRGB(screen->format, 0, 0, 0);
+    window = SDL_CreateWindow(caption, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, res_x, res_y, 0);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
     list_len = 0;
     list_head = NULL;
+
+    ticks_last_draw = SDL_GetTicks();
 }
 
 int graphics::add_object(graphics_obj *obj)
@@ -39,10 +39,16 @@ void graphics::draw(int delay) {
     obj_list *list = NULL;
     graphics_obj *obj = NULL;
 
+    int next_delay = delay - (SDL_GetTicks() - ticks_last_draw);
+    if (next_delay > 0) {
+        SDL_Delay(next_delay);
+    }
+
     list = list_head;
 
     // Clear screen
-    SDL_FillRect(screen, NULL, clear_colour);
+    // SDL_FillRect(screen, NULL, clear_colour);
+    SDL_RenderClear(renderer);
 
     while (list != NULL) {
         // Get object
@@ -51,16 +57,20 @@ void graphics::draw(int delay) {
         if (*obj->active) {
             offset.x = *obj->pos_x;
             offset.y = *obj->pos_y;
+            offset.w = obj->size_x;
+            offset.h = obj->size_y;
 
-            SDL_BlitSurface(obj->sprite, NULL, screen, &offset);
+            // SDL_BlitSurface(obj->sprite, NULL, screen, &offset);
+            SDL_RenderCopy(renderer, obj->texture, NULL, &offset);
         }
 
         // Get next
         list = list->next;
     }
 
-    SDL_Flip(screen);
-    SDL_Delay(delay);
+    // SDL_Flip(screen);
+    SDL_RenderPresent(renderer);
+    ticks_last_draw = SDL_GetTicks();
 }
 
 graphics::~graphics()
