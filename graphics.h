@@ -24,7 +24,6 @@ class graphics
 {
     private:
         SDL_Rect offset;
-        Uint32 clear_colour;
 
         int list_len;
 
@@ -35,15 +34,13 @@ class graphics
         };
         obj_list *list_head;
 
-        int ticks_last_draw;
-
     public:
         SDL_Window *window;
         SDL_Renderer *renderer;
 
         graphics(const char* caption, int res_x, int res_y, int bpp);
         int add_object(graphics_obj *obj);
-        void draw(int delay);
+        void draw();
         ~graphics();
 };
 

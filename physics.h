@@ -2,6 +2,8 @@
 #define PHYSICS_H
 
 #include <cstddef>
+#include <cstdint>
+#include <time.h>
 
 struct phys_obj
 {
@@ -15,13 +17,11 @@ struct phys_obj
 
     int step_x;
     int step_y;
-    int step_x_delay;
-    int step_y_delay;
-    int step_x_delay_count;
-    int step_y_delay_count;
 
-    int delay;
-    int delay_count;
+    time_t move_x_every;
+    time_t move_y_every;
+    timespec move_x_last;
+    timespec move_y_last;
 
     int bounce;
     phys_obj *collided;
@@ -45,6 +45,7 @@ class phys
             phys_obj *obj;
             obj_list *next;
         };
+
         obj_list *list_head;
 
         void check_collide(phys_obj *obj, int id);
@@ -52,6 +53,7 @@ class phys
         phys(int x, int y);
         int add_object(phys_obj *obj);
         void advance();
+        void reset_timings();
         ~phys();
 };
 

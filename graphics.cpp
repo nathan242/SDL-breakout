@@ -10,8 +10,6 @@ graphics::graphics(const char* caption, int res_x, int res_y, int bpp)
 
     list_len = 0;
     list_head = NULL;
-
-    ticks_last_draw = SDL_GetTicks();
 }
 
 int graphics::add_object(graphics_obj *obj)
@@ -35,19 +33,12 @@ int graphics::add_object(graphics_obj *obj)
     return ++list_len;
 }
 
-void graphics::draw(int delay) {
+void graphics::draw() {
     obj_list *list = NULL;
     graphics_obj *obj = NULL;
 
-    int next_delay = delay - (SDL_GetTicks() - ticks_last_draw);
-    if (next_delay > 0) {
-        SDL_Delay(next_delay);
-    }
-
     list = list_head;
 
-    // Clear screen
-    // SDL_FillRect(screen, NULL, clear_colour);
     SDL_RenderClear(renderer);
 
     while (list != NULL) {
@@ -60,7 +51,6 @@ void graphics::draw(int delay) {
             offset.w = obj->size_x;
             offset.h = obj->size_y;
 
-            // SDL_BlitSurface(obj->sprite, NULL, screen, &offset);
             SDL_RenderCopy(renderer, obj->texture, NULL, &offset);
         }
 
@@ -68,9 +58,7 @@ void graphics::draw(int delay) {
         list = list->next;
     }
 
-    // SDL_Flip(screen);
     SDL_RenderPresent(renderer);
-    ticks_last_draw = SDL_GetTicks();
 }
 
 graphics::~graphics()

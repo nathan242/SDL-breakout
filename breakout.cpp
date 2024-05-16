@@ -16,9 +16,9 @@
 #define MAX_LIVES 3
 #define MAX_LEVELS 3
 
-#define REDRAW_DELAY 4
+#define BALL_PHYS_DELAY 3100000
+#define PADDLE_PHYS_DELAY 3000000
 
-// SDL_Surface *press_a_key = NULL;
 SDL_Event input;
 bool wait_for_input = false;
 bool input_released = false;
@@ -28,6 +28,7 @@ bool life_lost = false;
 int lives;
 int level;
 int block_count;
+timespec inittime {0, 0};
 
 void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int area_x, int area_y)
 {
@@ -57,20 +58,26 @@ void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int are
             wait_for_input = true;
         }
     } else {
+        obj->move_x_every = BALL_PHYS_DELAY;
         if (obj->pos_x <= obj2->pos_x+20) {
-            obj->step_x = -2;
-        } else if (obj->pos_x >= obj2->pos_x+60) {
-            obj->step_x = 2;
-        } else if (obj->step_x == 2) {
-            obj->step_x = 1;
-        } else if (obj->step_x == -2) {
             obj->step_x = -1;
+            obj->move_x_every = BALL_PHYS_DELAY - 100000;
+        } else if (obj->pos_x >= obj2->pos_x+60) {
+            obj->step_x = 1;
+            obj->move_x_every = BALL_PHYS_DELAY - 100000;
         }
+        // else if (obj->step_x == 2) {
+        //     obj->step_x = 1;
+        //     obj->move_x_every = DEFAULT_PHYS_DELAY;
+        // } else if (obj->step_x == -2) {
+        //     obj->step_x = -1;
+        //     obj->move_x_every = DEFAULT_PHYS_DELAY;
+        // }
 
         if ((obj->pos_x >= obj2->pos_x+21 && obj->pos_x <= obj2->pos_x+35) || (obj->pos_x >= obj2->pos_x+45 && obj->pos_x <= obj2->pos_x+59)) {
-            obj->step_x_delay = 0;
+            obj->move_x_every = BALL_PHYS_DELAY;
         } else if (obj->pos_x >= obj2->pos_x+36 && obj->pos_x <= obj2->pos_x+44) {
-            obj->step_x_delay = 1;
+            obj->move_x_every = BALL_PHYS_DELAY + 2400000;
         }
     }
 }
@@ -96,12 +103,10 @@ void setup_blocks_level_0(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks_phys[block_id]->size_y = BLOCK_HEIGHT;
             blocks_phys[block_id]->step_x = 0;
             blocks_phys[block_id]->step_y = 0;
-            blocks_phys[block_id]->delay = 0;
-            blocks_phys[block_id]->delay_count = 0;
-            blocks_phys[block_id]->step_x_delay = 0;
-            blocks_phys[block_id]->step_y_delay = 0;
-            blocks_phys[block_id]->step_x_delay_count = 0;
-            blocks_phys[block_id]->step_y_delay_count = 0;
+            blocks_phys[block_id]->move_x_every = 0;
+            blocks_phys[block_id]->move_y_every = 0;
+            blocks_phys[block_id]->move_x_last = inittime;
+            blocks_phys[block_id]->move_y_last = inittime;
             blocks_phys[block_id]->bounce = 0;
             blocks_phys[block_id]->collided = NULL;
             blocks_phys[block_id]->callback = NULL;
@@ -150,12 +155,10 @@ void setup_blocks_level_1(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks_phys[block_id]->size_y = BLOCK_HEIGHT;
             blocks_phys[block_id]->step_x = 0;
             blocks_phys[block_id]->step_y = 0;
-            blocks_phys[block_id]->delay = 0;
-            blocks_phys[block_id]->delay_count = 0;
-            blocks_phys[block_id]->step_x_delay = 0;
-            blocks_phys[block_id]->step_y_delay = 0;
-            blocks_phys[block_id]->step_x_delay_count = 0;
-            blocks_phys[block_id]->step_y_delay_count = 0;
+            blocks_phys[block_id]->move_x_every = 0;
+            blocks_phys[block_id]->move_y_every = 0;
+            blocks_phys[block_id]->move_x_last = inittime;
+            blocks_phys[block_id]->move_y_last = inittime;
             blocks_phys[block_id]->bounce = 0;
             blocks_phys[block_id]->collided = NULL;
             blocks_phys[block_id]->callback = NULL;
@@ -204,12 +207,10 @@ void setup_blocks_level_2(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks_phys[block_id]->size_y = BLOCK_HEIGHT;
             blocks_phys[block_id]->step_x = y % 2;
             blocks_phys[block_id]->step_y = 0;
-            blocks_phys[block_id]->delay = 0;
-            blocks_phys[block_id]->delay_count = 0;
-            blocks_phys[block_id]->step_x_delay = 0;
-            blocks_phys[block_id]->step_y_delay = 0;
-            blocks_phys[block_id]->step_x_delay_count = 0;
-            blocks_phys[block_id]->step_y_delay_count = 0;
+            blocks_phys[block_id]->move_x_every = 0;
+            blocks_phys[block_id]->move_y_every = 0;
+            blocks_phys[block_id]->move_x_last = inittime;
+            blocks_phys[block_id]->move_y_last = inittime;
             blocks_phys[block_id]->bounce = 1;
             blocks_phys[block_id]->collided = NULL;
             blocks_phys[block_id]->callback = NULL;
@@ -272,12 +273,10 @@ void breakout()
     paddle_phys->size_y = 20;
     paddle_phys->step_x = 0;
     paddle_phys->step_y = 0;
-    paddle_phys->delay = 0;
-    paddle_phys->delay_count = 0;
-    paddle_phys->step_x_delay = 0;
-    paddle_phys->step_y_delay = 0;
-    paddle_phys->step_x_delay_count = 0;
-    paddle_phys->step_y_delay_count = 0;
+    paddle_phys->move_x_every = PADDLE_PHYS_DELAY;
+    paddle_phys->move_y_every = PADDLE_PHYS_DELAY;
+    paddle_phys->move_x_last = inittime;
+    paddle_phys->move_y_last = inittime;
     paddle_phys->bounce = 0;
     paddle_phys->collided = NULL;
     paddle_phys->callback = NULL;
@@ -298,12 +297,10 @@ void breakout()
     ball_phys->size_y = 20;
     ball_phys->step_x = 1;
     ball_phys->step_y = -1;
-    ball_phys->delay = 0;
-    ball_phys->delay_count = 0;
-    ball_phys->step_x_delay = 0;
-    ball_phys->step_y_delay = 0;
-    ball_phys->step_x_delay_count = 0;
-    ball_phys->step_y_delay_count = 0;
+    ball_phys->move_x_every = BALL_PHYS_DELAY;
+    ball_phys->move_y_every = BALL_PHYS_DELAY;
+    ball_phys->move_x_last = inittime;
+    ball_phys->move_y_last = inittime;
     ball_phys->bounce = 1;
     ball_phys->collided = NULL;
     ball_phys->callback = collision_callback;
@@ -524,8 +521,9 @@ void breakout()
                 // Reset ball direction
                 ball_phys->step_x = 1;
                 ball_phys->step_y = -1;
-                ball_phys->step_x_delay = 0;
+                ball_phys->move_x_every = BALL_PHYS_DELAY;
                 wait_for_input = false;
+                physics->reset_timings();
             } else if (!left && !right && !up && !down) {
                 input_released = true;
             }
@@ -540,7 +538,7 @@ void breakout()
         }
 
         // Redraw screen
-        window->draw(REDRAW_DELAY);
+        window->draw();
     }
 
     SDL_Quit();

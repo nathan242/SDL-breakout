@@ -36,50 +36,105 @@ void phys::advance()
 {
     obj_list *list = NULL;
     phys_obj *obj = NULL;
+    timespec now;
+    uint64_t timediff;
+    int iterations;
+    bool run_loop = true;
 
-    list = list_head;
+    clock_gettime(CLOCK_MONOTONIC, &now);
 
-    while (list != NULL) {
-        // Get object
-        obj = list->obj;
+    while (run_loop) {
+        run_loop = false;
 
-        if (obj->active) {
-            // Check if object is colliding with another
-            check_collide(obj, list->id);
-        }
+        list = list_head;
 
-        // Get next
-        list = list->next;
-    }
+        while (list != NULL) {
+            // Get object
+            obj = list->obj;
 
-    list = list_head;
-
-    while (list != NULL) {
-        // Get object
-        obj = list->obj;
-
-        if (obj->active) {
-            // Move object
-            if (obj->delay_count >= obj->delay) {
-                if (obj->step_x_delay_count >= obj->step_x_delay) {
-                    obj->pos_x += obj->step_x;
-                    obj->step_x_delay_count = 0;
-                } else {
-                    obj->step_x_delay_count++;
-                }
-
-                if (obj->step_y_delay_count >= obj->step_y_delay) {
-                    obj->pos_y += obj->step_y;
-                    obj->step_y_delay_count = 0;
-                } else {
-                    obj->step_y_delay_count++;
-                }
-
-                obj->delay_count = 0;
-            } else {
-                obj->delay_count++;
+            if (obj->active) {
+                // Check if object is colliding with another
+                check_collide(obj, list->id);
             }
+
+            // Get next
+            list = list->next;
         }
+
+        list = list_head;
+
+        while (list != NULL) {
+            // Get object
+            obj = list->obj;
+
+            if (obj->active) {
+                if (obj->move_x_every == 0) {
+                    iterations = 0;
+                } else if (obj->move_x_last.tv_sec == 0) {
+                    iterations = 1;
+                } else {
+                    timediff = ((now.tv_sec - obj->move_x_last.tv_sec) * 1000000000) + (now.tv_nsec - obj->move_x_last.tv_nsec);
+                    iterations = timediff / obj->move_x_every;
+                }
+
+                if (iterations > 0) {
+                    obj->pos_x += obj->step_x;
+
+                    if (iterations > 1) {
+                        run_loop = true;
+
+                        obj->move_x_last.tv_nsec += obj->move_x_every;
+
+                        if (obj->move_x_last.tv_nsec > 1000000000) {
+                            obj->move_x_last.tv_sec++;
+                            obj->move_x_last.tv_nsec -= 1000000000;
+                        }
+                    } else {
+                        obj->move_x_last = now;
+                    }
+                }
+
+                if (obj->move_y_every == 0) {
+                    iterations = 0;
+                } else if (obj->move_y_last.tv_sec == 0) {
+                    iterations = 1;
+                } else {
+                    timediff = ((now.tv_sec - obj->move_y_last.tv_sec) * 1000000000) + (now.tv_nsec - obj->move_y_last.tv_nsec);
+                    iterations = timediff / obj->move_y_every;
+                }
+
+                if (iterations > 0) {
+                    obj->pos_y += obj->step_y;
+
+                    if (iterations > 1) {
+                        run_loop = true;
+
+                        obj->move_y_last.tv_nsec += obj->move_y_every;
+
+                        if (obj->move_y_last.tv_nsec > 1000000000) {
+                            obj->move_y_last.tv_sec++;
+                            obj->move_y_last.tv_nsec -= 1000000000;
+                        }
+                    } else {
+                        obj->move_y_last = now;
+                    }
+                }
+            }
+
+            // Get next
+            list = list->next;
+        }
+    }
+}
+
+void phys::reset_timings()
+{
+    obj_list *list = list_head;
+    timespec inittime {0, 0};
+
+    while (list != NULL) {
+        list->obj->move_x_last = inittime;
+        list->obj->move_y_last = inittime;
 
         // Get next
         list = list->next;
