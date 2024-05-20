@@ -18,6 +18,8 @@
 
 #define BALL_PHYS_DELAY 3100000
 #define PADDLE_PHYS_DELAY 3000000
+#define BALL_PHYS_DELAY_OFFSET_MIDDLE 6000000
+#define BALL_PHYS_DELAY_OFFSET_EDGE 1000000
 
 SDL_Event input;
 bool wait_for_input = false;
@@ -61,23 +63,12 @@ void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int are
         obj->move_x_every = BALL_PHYS_DELAY;
         if (obj->pos_x <= obj2->pos_x+20) {
             obj->step_x = -1;
-            obj->move_x_every = BALL_PHYS_DELAY - 100000;
+            obj->move_x_every = BALL_PHYS_DELAY - BALL_PHYS_DELAY_OFFSET_EDGE;
         } else if (obj->pos_x >= obj2->pos_x+60) {
             obj->step_x = 1;
-            obj->move_x_every = BALL_PHYS_DELAY - 100000;
-        }
-        // else if (obj->step_x == 2) {
-        //     obj->step_x = 1;
-        //     obj->move_x_every = DEFAULT_PHYS_DELAY;
-        // } else if (obj->step_x == -2) {
-        //     obj->step_x = -1;
-        //     obj->move_x_every = DEFAULT_PHYS_DELAY;
-        // }
-
-        if ((obj->pos_x >= obj2->pos_x+21 && obj->pos_x <= obj2->pos_x+35) || (obj->pos_x >= obj2->pos_x+45 && obj->pos_x <= obj2->pos_x+59)) {
-            obj->move_x_every = BALL_PHYS_DELAY;
+            obj->move_x_every = BALL_PHYS_DELAY - BALL_PHYS_DELAY_OFFSET_EDGE;
         } else if (obj->pos_x >= obj2->pos_x+36 && obj->pos_x <= obj2->pos_x+44) {
-            obj->move_x_every = BALL_PHYS_DELAY + 2400000;
+            obj->move_x_every = BALL_PHYS_DELAY + BALL_PHYS_DELAY_OFFSET_MIDDLE;
         }
     }
 }
