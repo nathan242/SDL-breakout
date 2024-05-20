@@ -47,6 +47,7 @@ class phys
         };
 
         obj_list *list_head;
+        obj_list *list_curr;
 
         void check_collide(phys_obj *obj, int id);
     public:

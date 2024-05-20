@@ -32,7 +32,9 @@ class graphics
             graphics_obj *obj;
             obj_list *next;
         };
+
         obj_list *list_head;
+        obj_list *list_curr;
 
     public:
         SDL_Window *window;

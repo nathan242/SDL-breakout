@@ -10,6 +10,7 @@ graphics::graphics(const char* caption, int res_x, int res_y, int bpp)
 
     list_len = 0;
     list_head = NULL;
+    list_curr = NULL;
 }
 
 int graphics::add_object(graphics_obj *obj)
@@ -18,16 +19,14 @@ int graphics::add_object(graphics_obj *obj)
     list->obj = obj;
     list->next = NULL;
 
-    // First
+    // First item
     if (list_head == NULL) {
         list_head = list;
+        list_curr = list;
     } else {
         // Append to list
-        obj_list *list_item = list_head;
-        while (list_item->next != NULL) {
-            list_item = list_item->next;
-        }
-        list_item->next = list;
+        list_curr->next = list;
+        list_curr = list;
     }
 
     return ++list_len;
