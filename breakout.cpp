@@ -534,6 +534,19 @@ void breakout()
 
     SDL_Quit();
 
+    SDL_FreeSurface(paddle->sprite);
+    SDL_DestroyTexture(paddle->texture);
+    SDL_FreeSurface(ball->sprite);
+    SDL_DestroyTexture(ball->texture);
+    SDL_FreeSurface(press_a_key->sprite);
+    SDL_DestroyTexture(press_a_key->texture);
+    SDL_FreeSurface(game_over->sprite);
+    SDL_DestroyTexture(game_over->texture);
+    SDL_FreeSurface(level_text->sprite);
+    SDL_DestroyTexture(level_text->texture);
+    SDL_FreeSurface(lives_text->sprite);
+    SDL_DestroyTexture(lives_text->texture);
+
     delete physics;
     delete window;
     delete paddle_phys;
@@ -546,15 +559,21 @@ void breakout()
     delete lives_text;
 
     for (int x = 0; x < NUM_BLOCKS; x++) {
+        SDL_FreeSurface(blocks[x]->sprite);
+        SDL_DestroyTexture(blocks[x]->texture);
         delete blocks_phys[x];
         delete blocks[x];
     }
 
     for (int x = 0; x < MAX_LEVELS; x++) {
+        SDL_FreeSurface(level_num[x]->sprite);
+        SDL_DestroyTexture(level_num[x]->texture);
         delete level_num[x];
     }
 
     for (int x = 0; x < MAX_LIVES; x++) {
+        SDL_FreeSurface(lives_num[x]->sprite);
+        SDL_DestroyTexture(lives_num[x]->texture);
         delete lives_num[x];
     }
 
