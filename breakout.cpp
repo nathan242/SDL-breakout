@@ -415,7 +415,7 @@ void breakout()
 
     level_num[0]->draw_active = true;
     lives_num[lives-1]->draw_active = true;
-    setup_blocks_level_2(window, blocks_phys, blocks);
+    setup_blocks_level_0(window, blocks_phys, blocks);
 
     // Main loop
     while (quit==false)
