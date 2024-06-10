@@ -21,7 +21,6 @@
 #define BALL_PHYS_DELAY_OFFSET_MIDDLE 6000000
 #define BALL_PHYS_DELAY_OFFSET_EDGE 1000000
 
-SDL_Event input;
 bool wait_for_input = false;
 bool input_released = false;
 bool is_game_over = false;
@@ -198,7 +197,7 @@ void setup_blocks_level_2(graphics *window, phys_obj *blocks_phys[], graphics_ob
             blocks_phys[block_id]->size_y = BLOCK_HEIGHT;
             blocks_phys[block_id]->step_x = y % 2;
             blocks_phys[block_id]->step_y = 0;
-            blocks_phys[block_id]->move_x_every = 0;
+            blocks_phys[block_id]->move_x_every = 4000000;
             blocks_phys[block_id]->move_y_every = 0;
             blocks_phys[block_id]->move_x_last = inittime;
             blocks_phys[block_id]->move_y_last = inittime;
@@ -240,6 +239,8 @@ void breakout()
     block_count = NUM_BLOCKS;
     char num_image[] = "x.png";
     char num_str[2];
+
+    SDL_Event input;
 
     graphics *window = new graphics("SDL BREAKOUT", RES_X, RES_Y, BPP);
 
@@ -414,7 +415,7 @@ void breakout()
 
     level_num[0]->draw_active = true;
     lives_num[lives-1]->draw_active = true;
-    setup_blocks_level_0(window, blocks_phys, blocks);
+    setup_blocks_level_2(window, blocks_phys, blocks);
 
     // Main loop
     while (quit==false)
