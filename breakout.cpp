@@ -2,6 +2,7 @@
 #include "graphics.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <unistd.h>
 
 #define RES_X 800
 #define RES_Y 600
@@ -241,6 +242,11 @@ void breakout()
     char num_str[2];
 
     SDL_Event input;
+
+    char *base_path = SDL_GetBasePath();
+
+    chdir(base_path);
+    free(base_path);
 
     graphics *window = new graphics("SDL BREAKOUT", RES_X, RES_Y, BPP);
 

@@ -62,6 +62,9 @@ void graphics::draw() {
 
 graphics::~graphics()
 {
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+
     if (list_head != NULL) {
         obj_list *list = NULL;
         obj_list *prev = NULL;
