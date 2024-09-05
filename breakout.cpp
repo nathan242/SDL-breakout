@@ -4,6 +4,10 @@
 #include <SDL2/SDL_image.h>
 #include <unistd.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #define RES_X 800
 #define RES_Y 600
 #define BPP 32
@@ -31,6 +35,36 @@ int lives;
 int level;
 int block_count;
 timespec inittime {0, 0};
+
+bool quit = false;
+bool left = false;
+bool right = false;
+bool up = false;
+bool down = false;
+
+char num_image[] = "x.png";
+char num_str[2];
+
+SDL_Event input;
+
+char *base_path;
+
+graphics *window;
+
+graphics_obj *paddle;
+phys_obj *paddle_phys;
+graphics_obj *ball;
+phys_obj *ball_phys;
+graphics_obj *blocks[NUM_BLOCKS];
+phys_obj *blocks_phys[NUM_BLOCKS];
+graphics_obj *press_a_key;
+graphics_obj *game_over;
+graphics_obj *level_text;
+graphics_obj *lives_text;
+graphics_obj *level_num[MAX_LEVELS];
+graphics_obj *lives_num[MAX_LIVES];
+
+phys *physics;
 
 void collision_callback(phys_obj *obj, phys_obj *obj2, int collide_axis, int area_x, int area_y)
 {
@@ -225,44 +259,29 @@ void setup_blocks_level_2(graphics *window, phys_obj *blocks_phys[], graphics_ob
     }
 }
 
-void breakout()
+void breakout_init()
 {
-    // bool vars for control directions and quit event
-    bool quit = false;
-    bool left = false;
-    bool right = false;
-    bool up = false;
-    bool down = false;
-
     wait_for_input = true;
     lives = 3;
     level = 0;
     block_count = NUM_BLOCKS;
-    char num_image[] = "x.png";
-    char num_str[2];
-
-    SDL_Event input;
 
     char *base_path = SDL_GetBasePath();
 
     chdir(base_path);
     free(base_path);
 
-    graphics *window = new graphics("SDL BREAKOUT", RES_X, RES_Y, BPP);
+    window = new graphics("SDL BREAKOUT", RES_X, RES_Y, BPP);
 
     // Game objects
-    graphics_obj *paddle = new graphics_obj;
-    phys_obj *paddle_phys = new phys_obj;
-    graphics_obj *ball = new graphics_obj;
-    phys_obj *ball_phys = new phys_obj;
-    graphics_obj *blocks[NUM_BLOCKS];
-    phys_obj *blocks_phys[NUM_BLOCKS];
-    graphics_obj *press_a_key = new graphics_obj;
-    graphics_obj *game_over = new graphics_obj;
-    graphics_obj *level_text = new graphics_obj;
-    graphics_obj *lives_text = new graphics_obj;
-    graphics_obj *level_num[MAX_LEVELS];
-    graphics_obj *lives_num[MAX_LIVES];
+    paddle = new graphics_obj;
+    paddle_phys = new phys_obj;
+    ball = new graphics_obj;
+    ball_phys = new phys_obj;
+    press_a_key = new graphics_obj;
+    game_over = new graphics_obj;
+    level_text = new graphics_obj;
+    lives_text = new graphics_obj;
 
     // Paddle
     paddle_phys->pos_x = 50;
@@ -396,7 +415,7 @@ void breakout()
     }
 
     // Physics
-    phys *physics = new phys(RES_X, RES_Y);
+    physics = new phys(RES_X, RES_Y);
 
     for (int x = 0; x < NUM_BLOCKS; x++) {
         blocks_phys[x] = new phys_obj;
@@ -422,9 +441,12 @@ void breakout()
     level_num[0]->draw_active = true;
     lives_num[lives-1]->draw_active = true;
     setup_blocks_level_0(window, blocks_phys, blocks);
+}
 
+void breakout_loop()
+{
     // Main loop
-    while (quit==false)
+    if (quit==false)
     {
         // Read inputs
         while (SDL_PollEvent(&input))
@@ -537,59 +559,62 @@ void breakout()
 
         // Redraw screen
         window->draw();
+    } else {
+        SDL_Quit();
+
+        SDL_FreeSurface(paddle->sprite);
+        SDL_DestroyTexture(paddle->texture);
+        SDL_FreeSurface(ball->sprite);
+        SDL_DestroyTexture(ball->texture);
+        SDL_FreeSurface(press_a_key->sprite);
+        SDL_DestroyTexture(press_a_key->texture);
+        SDL_FreeSurface(game_over->sprite);
+        SDL_DestroyTexture(game_over->texture);
+        SDL_FreeSurface(level_text->sprite);
+        SDL_DestroyTexture(level_text->texture);
+        SDL_FreeSurface(lives_text->sprite);
+        SDL_DestroyTexture(lives_text->texture);
+
+        delete physics;
+        delete window;
+        delete paddle_phys;
+        delete paddle;
+        delete ball_phys;
+        delete ball;
+        delete press_a_key;
+        delete game_over;
+        delete level_text;
+        delete lives_text;
+
+        for (int x = 0; x < NUM_BLOCKS; x++) {
+            SDL_FreeSurface(blocks[x]->sprite);
+            SDL_DestroyTexture(blocks[x]->texture);
+            delete blocks_phys[x];
+            delete blocks[x];
+        }
+
+        for (int x = 0; x < MAX_LEVELS; x++) {
+            SDL_FreeSurface(level_num[x]->sprite);
+            SDL_DestroyTexture(level_num[x]->texture);
+            delete level_num[x];
+        }
+
+        for (int x = 0; x < MAX_LIVES; x++) {
+            SDL_FreeSurface(lives_num[x]->sprite);
+            SDL_DestroyTexture(lives_num[x]->texture);
+            delete lives_num[x];
+        }
+
+        emscripten_cancel_main_loop();
     }
-
-    SDL_Quit();
-
-    SDL_FreeSurface(paddle->sprite);
-    SDL_DestroyTexture(paddle->texture);
-    SDL_FreeSurface(ball->sprite);
-    SDL_DestroyTexture(ball->texture);
-    SDL_FreeSurface(press_a_key->sprite);
-    SDL_DestroyTexture(press_a_key->texture);
-    SDL_FreeSurface(game_over->sprite);
-    SDL_DestroyTexture(game_over->texture);
-    SDL_FreeSurface(level_text->sprite);
-    SDL_DestroyTexture(level_text->texture);
-    SDL_FreeSurface(lives_text->sprite);
-    SDL_DestroyTexture(lives_text->texture);
-
-    delete physics;
-    delete window;
-    delete paddle_phys;
-    delete paddle;
-    delete ball_phys;
-    delete ball;
-    delete press_a_key;
-    delete game_over;
-    delete level_text;
-    delete lives_text;
-
-    for (int x = 0; x < NUM_BLOCKS; x++) {
-        SDL_FreeSurface(blocks[x]->sprite);
-        SDL_DestroyTexture(blocks[x]->texture);
-        delete blocks_phys[x];
-        delete blocks[x];
-    }
-
-    for (int x = 0; x < MAX_LEVELS; x++) {
-        SDL_FreeSurface(level_num[x]->sprite);
-        SDL_DestroyTexture(level_num[x]->texture);
-        delete level_num[x];
-    }
-
-    for (int x = 0; x < MAX_LIVES; x++) {
-        SDL_FreeSurface(lives_num[x]->sprite);
-        SDL_DestroyTexture(lives_num[x]->texture);
-        delete lives_num[x];
-    }
-
-    return;
 }
 
 int main (int argc, char *argv[])
 {
-    breakout();
+    breakout_init();
+    emscripten_set_main_loop(breakout_loop, 0, 1);
+    emscripten_set_main_loop_timing(EM_TIMING_RAF, 1);
+
     return 0;
 }
 

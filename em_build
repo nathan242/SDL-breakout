@@ -1,0 +1,1 @@
+em++ -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS=["png"] breakout.cpp physics.cpp graphics.cpp -o breakout.html --preload-file 1.png --preload-file 2.png --preload-file 3.png --preload-file game_over.png --preload-file level.png --preload-file lives.png --preload-file press_a_key.png
